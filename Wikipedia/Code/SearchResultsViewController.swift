@@ -318,6 +318,9 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         guard (searchTerm as NSString).character(at: 0) != NSTextAttachment.character else { return }
 
         resetSearchResults()
+        if isHybridSearchActive && !isShowingHybridResults {
+            hybridSuggestionsViewModel.searchTerm = searchTerm
+        }
         let start = Date()
 
         let failure = { (error: Error, type: WMFSearchType) in
@@ -339,8 +342,7 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
                 self.resultsViewController.resultsInfo = results
                 self.resultsViewController.searchSiteURL = siteURL
                 self.resultsViewController.results = resultsArray
-                if self.isHybridSearchActive && !self.isShowingHybridResults {
-                    self.hybridSuggestionsViewModel.searchTerm = searchTerm
+                if self.isHybridSearchActive && !self.isShowingHybridResults && searchTerm == self.searchTerm {
                     self.hybridSuggestionsViewModel.titles = resultsArray.compactMap { $0.displayTitle }
                 }
                 guard !suggested else { return }
