@@ -56,6 +56,16 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         }
     }
 
+    /// Set by hosts that participate in the hybrid search experiment (the main search experience).
+    /// When false (e.g. link insertion search), all hybrid search code paths are skipped.
+    var supportsHybridSearch: Bool = false
+
+    /// Called when hybrid search needs to set the search bar text without focusing the keyboard.
+    var setSearchBarTextAction: ((String) -> Void)?
+
+    /// Called when the user turns off the hybrid search experiment, so the host can refresh its search bar placeholder.
+    var hybridSearchExperimentTurnedOffAction: (() -> Void)?
+
     // MARK: - Private properties
 
     private let source: EventLoggingSource
@@ -144,6 +154,10 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         let languagesBarHeight = searchLanguageBarViewController?.view.bounds.height ?? 0
         recentSearchesViewModel.topPadding = languagesBarHeight
         resultsViewController.collectionView.contentInset.top = languagesBarHeight
+        if isHybridSearchActive || isShowingHybridResults {
+            hybridSuggestionsViewController.additionalSafeAreaInsets.top = languagesBarHeight
+            hybridResultsViewController.additionalSafeAreaInsets.top = languagesBarHeight
+        }
     }
 
     // MARK: - Embedded content container
@@ -187,7 +201,13 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
     }
 
     private func showSearchResults(animated: Bool) {
-        embedInContainer(resultsViewController, animated: animated)
+        if isShowingHybridResults {
+            embedInContainer(hybridResultsViewController, animated: animated)
+        } else if isHybridSearchActive {
+            embedInContainer(hybridSuggestionsViewController, animated: animated)
+        } else {
+            embedInContainer(resultsViewController, animated: animated)
+        }
     }
 
     private func showRecentSearches(animated: Bool) {
@@ -298,6 +318,9 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         guard (searchTerm as NSString).character(at: 0) != NSTextAttachment.character else { return }
 
         resetSearchResults()
+        if isHybridSearchActive && !isShowingHybridResults {
+            hybridSuggestionsViewModel.searchTerm = searchTerm
+        }
         let start = Date()
 
         let failure = { (error: Error, type: WMFSearchType) in
@@ -319,6 +342,9 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
                 self.resultsViewController.resultsInfo = results
                 self.resultsViewController.searchSiteURL = siteURL
                 self.resultsViewController.results = resultsArray
+                if self.isHybridSearchActive && !self.isShowingHybridResults && searchTerm == self.searchTerm {
+                    self.hybridSuggestionsViewModel.titles = resultsArray.compactMap { $0.displayTitle }
+                }
                 guard !suggested else { return }
                 SearchFunnel.shared.logSearchResults(with: type, resultCount: resultsArray.count, elapsedTime: Date().timeIntervalSince(start), source: self.source.stringValue)
             }
@@ -355,6 +381,9 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         fetcher.cancelAllFetches()
         resultsViewController.emptyViewType = .none
         resultsViewController.results = []
+        if isHybridSearchActive {
+            hybridSuggestionsViewModel.titles = []
+        }
     }
 
     func didCancelSearch() {
@@ -487,6 +516,228 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         recentSearchesViewModel.recentSearchTerms = currentRecentSearchTerms()
     }
 
+    // MARK: - Hybrid Search
+
+    private var hybridSearchDataController: WMFHybridSearchDataController { .shared }
+
+    /// Mirrors Android's `isHybridSearchExperimentOn`: hybrid behavior only applies for assigned
+    /// experiment users with the experiment turned on and a supported search language.
+    private var isHybridSearchActive: Bool {
+        supportsHybridSearch && hybridSearchDataController.isHybridSearchActive(languageCode: siteURL?.wmf_languageCode)
+    }
+
+    /// Mirrors Android's `showHybridSearch`: true after the user submits a query (suggestion tap,
+    /// "Search for:" row, or keyboard search key) while the hybrid search experiment is active.
+    private var isShowingHybridResults = false
+    private var hybridSearchTerm: String?
+    private var hybridLoadTask: Task<Void, Never>?
+
+    /// Separate fetcher so hybrid lexical fetches aren't cancelled by `resetSearchResults`.
+    private lazy var hybridLexicalFetcher = WMFSearchFetcher()
+
+    private lazy var hybridSuggestionsViewModel: WMFHybridSearchSuggestionsViewModel = {
+        WMFHybridSearchSuggestionsViewModel(
+            localizedStrings: WMFHybridSearchSuggestionsViewModel.LocalizedStrings(searchForLabel: CommonStrings.hybridSearchSuggestionTitle),
+            onSuggestionTap: { [weak self] title in
+                self?.enterHybridResultsMode(searchTerm: title)
+            },
+            onSearchForTap: { [weak self] term in
+                self?.enterHybridResultsMode(searchTerm: term)
+            }
+        )
+    }()
+
+    private lazy var hybridSuggestionsViewController: UIViewController = {
+        UIHostingController(rootView: WMFHybridSearchSuggestionsView(viewModel: hybridSuggestionsViewModel))
+    }()
+
+    private lazy var hybridResultsViewModel: WMFHybridSearchResultsViewModel = {
+        let group = WMFHybridSearchGroup(rawValue: hybridSearchDataController.assignedGroupName) ?? .control
+        let strings = WMFHybridSearchResultsViewModel.LocalizedStrings(
+            betaTag: CommonStrings.hybridSearchBetaTag,
+            headerDescription: CommonStrings.hybridSearchResultsHeaderDescription,
+            learnMore: CommonStrings.hybridSearchOnboardingLearnMore,
+            turnOffExperiment: CommonStrings.hybridSearchTurnOffExperimentLabel,
+            rateResult: CommonStrings.hybridSearchResultsRateLabel,
+            rated: CommonStrings.hybridSearchResultsRatedLabel,
+            rateThumbsUpAccessibility: CommonStrings.hybridSearchResultsRateThumbUp,
+            rateThumbsDownAccessibility: CommonStrings.hybridSearchResultsRateThumbDown,
+            semanticResultsEmpty: CommonStrings.hybridSearchResultsEmpty,
+            errorMessage: CommonStrings.hybridSearchErrorMessage,
+            noResultsHeader: CommonStrings.hybridSearchNoResultsHeader,
+            noResultsDescription: CommonStrings.hybridSearchNoResultsDescription,
+            noResultsRephraseSuggestion: CommonStrings.hybridSearchNoResultsRephraseSuggestion,
+            noResultsRelatedTopicSuggestion: CommonStrings.hybridSearchNoResultsRelatedTopicSuggestion
+        )
+        return WMFHybridSearchResultsViewModel(
+            group: group,
+            localizedStrings: strings,
+            onTapLexical: { [weak self] item in
+                self?.navigateToHybridResult(title: item.title)
+            },
+            onTapSemantic: { [weak self] item in
+                self?.navigateToHybridResult(title: item.title)
+            },
+            onRate: { _, _ in
+                // Rating only updates UI state for now; instrumentation comes in a later commit.
+            },
+            onLearnMore: { [weak self] in
+                self?.navigate(to: URL(string: "https://www.mediawiki.org/wiki/Readers/Information_Retrieval/Phase_1"), useSafari: true)
+            },
+            onTurnOffExperiment: { [weak self] in
+                self?.turnOffHybridSearchExperiment()
+            }
+        )
+    }()
+
+    private lazy var hybridResultsViewController: UIViewController = {
+        UIHostingController(rootView: WMFHybridSearchResultsView(viewModel: hybridResultsViewModel))
+    }()
+
+    /// Switches the results area to the hybrid results view and loads lexical + semantic results for `term`.
+    func enterHybridResultsMode(searchTerm term: String) {
+        guard isHybridSearchActive else { return }
+        let trimmedTerm = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedTerm.wmf_hasNonWhitespaceText else { return }
+
+        hybridSearchTerm = trimmedTerm
+        isShowingHybridResults = true
+        setSearchBarTextAction?(trimmedTerm)
+        loadViewIfNeeded()
+        showSearchResults(animated: true)
+        loadHybridSearchResults(for: trimmedTerm)
+    }
+
+    private func exitHybridResultsMode() {
+        hybridLoadTask?.cancel()
+        hybridLoadTask = nil
+        isShowingHybridResults = false
+        hybridSearchTerm = nil
+    }
+
+    private func turnOffHybridSearchExperiment() {
+        hybridSearchDataController.isHybridSearchEnabled = false
+        let term = hybridSearchTerm
+        exitHybridResultsMode()
+        hybridSearchExperimentTurnedOffAction?()
+        if let term, term.wmf_hasNonWhitespaceText {
+            searchTerm = term
+            showSearchResults(animated: true)
+            search(for: term, suggested: false)
+        } else {
+            showRecentSearches(animated: true)
+        }
+    }
+
+    private func loadHybridSearchResults(for term: String) {
+        guard let siteURL, let languageCode = siteURL.wmf_languageCode else { return }
+
+        hybridResultsViewModel.loadState = .loading
+        hybridResultsViewModel.lexicalItems = []
+        hybridResultsViewModel.semanticItems = []
+
+        hybridLoadTask?.cancel()
+        hybridLoadTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            async let lexicalFetch = fetchHybridLexicalItems(for: term, siteURL: siteURL)
+            async let semanticFetch = fetchHybridSemanticItems(for: term, languageCode: languageCode)
+            let (lexicalResult, semanticResult) = await (lexicalFetch, semanticFetch)
+
+            guard !Task.isCancelled, self.isShowingHybridResults, term == self.hybridSearchTerm else { return }
+
+            if case .failure = lexicalResult, case .failure = semanticResult {
+                self.hybridResultsViewModel.loadState = .error
+                return
+            }
+
+            let lexicalItems = (try? lexicalResult.get()) ?? []
+            let semanticItems = (try? semanticResult.get()) ?? []
+            self.hybridResultsViewModel.lexicalItems = lexicalItems
+            self.hybridResultsViewModel.semanticItems = semanticItems
+            self.hybridResultsViewModel.loadState = lexicalItems.isEmpty && semanticItems.isEmpty ? .empty : .loaded
+        }
+    }
+
+    /// Mirrors Android's `loadHybridSearchResults` lexical branch: prefix search first, then
+    /// full-text search if fewer than 3 results, deduped by title and capped at 3.
+    private func fetchHybridLexicalItems(for term: String, siteURL: URL) async -> Result<[WMFHybridSearchLexicalItem], Error> {
+        let resultLimit = 3
+        do {
+            let prefixResults = try await fetchHybridLexicalResults(term: term, siteURL: siteURL, resultLimit: resultLimit, fullTextSearch: false, appendToPreviousResults: nil)
+            var searchResults = prefixResults.results ?? []
+            if searchResults.count < resultLimit {
+                if let combinedResults = try? await fetchHybridLexicalResults(term: term, siteURL: siteURL, resultLimit: resultLimit, fullTextSearch: true, appendToPreviousResults: prefixResults) {
+                    searchResults = combinedResults.results ?? searchResults
+                }
+            }
+
+            var seenTitles = Set<String>()
+            var items: [WMFHybridSearchLexicalItem] = []
+            for searchResult in searchResults {
+                guard let title = searchResult.displayTitle, !title.isEmpty, seenTitles.insert(title).inserted else { continue }
+                let description = (searchResult.wikidataDescription as NSString?)?.wmf_stringByCapitalizingFirstCharacter(usingWikipediaLanguageCode: siteURL.wmf_languageCode)
+                items.append(WMFHybridSearchLexicalItem(title: title, description: description, thumbnailURL: searchResult.thumbnailURL, boldedMatchTerm: term))
+                if items.count == resultLimit {
+                    break
+                }
+            }
+            return .success(items)
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func fetchHybridLexicalResults(term: String, siteURL: URL, resultLimit: Int, fullTextSearch: Bool, appendToPreviousResults previousResults: WMFSearchResults?) async throws -> WMFSearchResults {
+        try await withCheckedThrowingContinuation { continuation in
+            hybridLexicalFetcher.fetchArticles(forSearchTerm: term, siteURL: siteURL, resultLimit: UInt(resultLimit), fullTextSearch: fullTextSearch, appendToPreviousResults: previousResults, failure: { error in
+                continuation.resume(throwing: error)
+            }, success: { results in
+                continuation.resume(returning: results)
+            })
+        }
+    }
+
+    /// Fetches semantic results and enriches description/thumbnail per title, mirroring Android's
+    /// `action=query prop=info|description|pageimages` enrichment via the existing summary endpoint.
+    private func fetchHybridSemanticItems(for term: String, languageCode: String) async -> Result<[WMFHybridSearchSemanticItem], Error> {
+        do {
+            let semanticResults = try await hybridSearchDataController.fetchSemanticSearchResults(query: term, languageCode: languageCode, count: 3)
+            let project = WMFProject.wikipedia(WMFLanguage(languageCode: languageCode, languageVariantCode: nil))
+            var items: [WMFHybridSearchSemanticItem] = []
+            for (index, semanticResult) in semanticResults.enumerated() {
+                let summary = try? await WMFArticleSummaryDataController.shared.fetchArticleSummary(project: project, title: semanticResult.title)
+                items.append(WMFHybridSearchSemanticItem(
+                    id: "\(index)-\(semanticResult.rawTitle)",
+                    snippetHTML: semanticResult.processedSnippetHTML,
+                    title: semanticResult.title,
+                    description: summary?.description,
+                    thumbnailURL: summary?.thumbnailURL
+                ))
+            }
+            return .success(items)
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func navigateToHybridResult(title: String) {
+        guard let articleURL = siteURL?.wmf_URL(withTitle: title) else { return }
+        saveHybridRecentSearch()
+        articleTappedAction?(articleURL, false)
+    }
+
+    private func saveHybridRecentSearch() {
+        guard
+            let term = hybridSearchTerm,
+            let url = siteURL,
+            let entry = MWKRecentSearchEntry(url: url, searchTerm: term)
+        else { return }
+        dataStore.recentSearchList.addEntry(entry)
+        dataStore.recentSearchList.save()
+        reloadRecentSearches()
+    }
+
     // MARK: - Theme
 
     override func apply(theme: Theme) {
@@ -509,6 +760,15 @@ extension SearchResultsViewController: UISearchResultsUpdating {
         needsAnimateLanguageBarMovement = false
 
         if text.wmf_hasNonWhitespaceText {
+            if isShowingHybridResults {
+                if text == hybridSearchTerm {
+                    // Programmatic search bar update from hybrid search; keep showing hybrid results.
+                    return
+                }
+                // The user typed while hybrid results were showing; fall back to the typing state.
+                exitHybridResultsMode()
+            }
+
             showSearchResults(animated: false)
 
             if let lastSearchSiteURL,
@@ -529,6 +789,9 @@ extension SearchResultsViewController: UISearchResultsUpdating {
             searchTask?.cancel()
             searchTask = nil
             searchTerm = nil
+            if isShowingHybridResults {
+                exitHybridResultsMode()
+            }
             resetSearchResults()
             showRecentSearches(animated: true)
         }
@@ -577,6 +840,31 @@ extension SearchResultsViewController: UISearchControllerDelegate {
 extension SearchResultsViewController: SearchLanguagesBarViewControllerDelegate {
     func searchLanguagesBarViewController(_ controller: SearchLanguagesBarViewController, didChangeSelectedSearchContentLanguageCode contentLanguageCode: String) {
         SearchFunnel.shared.logSearchLangSwitch(source: source.stringValue)
+
+        if isShowingHybridResults {
+            if isHybridSearchActive, let hybridSearchTerm {
+                // Hybrid search supports the new language; reload hybrid results for it.
+                loadHybridSearchResults(for: hybridSearchTerm)
+                return
+            }
+            // Mirrors Android: switching to an unsupported language resets to the standard experience.
+            exitHybridResultsMode()
+            showSearchResults(animated: false)
+        }
+
         search()
+    }
+}
+
+// MARK: - UISearchBarDelegate
+
+extension SearchResultsViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        guard isHybridSearchActive,
+              let text = searchBar.text,
+              text.wmf_hasNonWhitespaceText else {
+            return
+        }
+        enterHybridResultsMode(searchTerm: text)
     }
 }
