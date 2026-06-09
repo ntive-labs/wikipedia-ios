@@ -330,7 +330,7 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         NSUserActivity.wmf_makeActive(NSUserActivity.wmf_searchView())
-        
+
         if isRootTabView {
             ArticleTabsFunnel.shared.logIconImpression(interface: .search, project: nil)
         } else {
@@ -340,7 +340,67 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
                 self.navigationItem.searchController?.searchBar.becomeFirstResponder()
             }
         }
-        
+
+        presentHybridSearchOnboardingIfNeeded()
+    }
+
+    // MARK: - Hybrid Search Onboarding
+
+    /// Mirrors Android's SearchActivity.newIntent interception: when the user enters search and qualifies for the hybrid search experiment, show the onboarding screen before search.
+    private func presentHybridSearchOnboardingIfNeeded() {
+        let hybridSearchDataController = WMFHybridSearchDataController.shared
+        let languageCode = dataStore?.languageLinkController.appLanguage?.languageCode
+
+        guard presentedViewController == nil,
+              hybridSearchDataController.shouldShowOnboarding(languageCode: languageCode) else {
+            return
+        }
+
+        hybridSearchDataController.isHybridSearchOnboardingShown = true
+        hybridSearchDataController.isHybridSearchEnabled = true
+
+        let localizedStrings = WMFHybridSearchOnboardingViewModel.LocalizedStrings(
+            betaTag: CommonStrings.hybridSearchBetaTag,
+            title: CommonStrings.hybridSearchOnboardingScreenTitle,
+            askQuestionsTitle: CommonStrings.hybridSearchOnboardingSearchTitle,
+            askQuestionsDescription: CommonStrings.hybridSearchOnboardingSearchDescription,
+            betaFeatureTitle: CommonStrings.hybridSearchOnboardingOptInChoiceTitle,
+            betaFeatureDescription: CommonStrings.hybridSearchOnboardingOptInChoiceDescription,
+            needInspirationTitle: CommonStrings.hybridSearchOnboardingSearchExampleTitle,
+            needInspirationDescription: CommonStrings.hybridSearchOnboardingSearchExampleDescription,
+            exampleQueries: [
+                CommonStrings.hybridSearchOnboardingExampleQueryPlutoAsPlanet,
+                CommonStrings.hybridSearchOnboardingExampleQueryFirstOlympics,
+                CommonStrings.hybridSearchOnboardingExampleQueryRnaVsDna,
+                CommonStrings.hybridSearchOnboardingExampleQueryPineapplePizza,
+                CommonStrings.hybridSearchOnboardingExampleQueryBiggestCitiesEurope
+            ],
+            learnMoreButtonTitle: CommonStrings.hybridSearchOnboardingLearnMore,
+            getStartedButtonTitle: CommonStrings.getStartedTitle
+        )
+
+        let viewModel = WMFHybridSearchOnboardingViewModel(localizedStrings: localizedStrings, languageCode: languageCode)
+
+        viewModel.onGetStarted = { [weak self] in
+            self?.dismiss(animated: true) {
+                self?.makeSearchBarBecomeFirstResponder()
+            }
+        }
+
+        viewModel.onExampleQueryTap = { [weak self] exampleQuery in
+            self?.dismiss(animated: true) {
+                // Phase 3: route the example query into the hybrid results screen. For now, trigger a standard search.
+                self?.searchAndMakeResultsVisibleForSearchTerm(exampleQuery, animated: true)
+            }
+        }
+
+        viewModel.onLearnMore = { [weak self] in
+            self?.navigate(to: URL(string: "https://www.mediawiki.org/wiki/Readers/Information_Retrieval/Phase_1"), useSafari: true)
+        }
+
+        let onboardingVC = WMFHybridSearchOnboardingViewController(viewModel: viewModel)
+        onboardingVC.modalPresentationStyle = .fullScreen
+        present(onboardingVC, animated: true)
     }
     
     override func viewDidLayoutSubviews() {

@@ -520,6 +520,36 @@ public class CommonStrings: NSObject {
 
     public static let continueButton = WMFLocalizedString("continue-button-title", value: "Continue", comment: "Continue button title")
 
+    // Hybrid Search experiment onboarding
+
+    public static let hybridSearchBetaTag = WMFLocalizedString("hybrid-search-beta-tag", value: "Beta", comment: "Tag label indicating the hybrid search feature is in beta. Displayed uppercased on the hybrid search onboarding screen.")
+
+    public static let hybridSearchOnboardingScreenTitle = WMFLocalizedString("hybrid-search-onboarding-screen-title", value: "A new way to search", comment: "Title of the hybrid search experiment onboarding screen")
+
+    public static let hybridSearchOnboardingSearchTitle = WMFLocalizedString("hybrid-search-onboarding-search-title", value: "Ask questions, get answers", comment: "Hybrid search onboarding screen, title of the natural language search section")
+
+    public static let hybridSearchOnboardingSearchDescription = WMFLocalizedString("hybrid-search-onboarding-search-description", value: "This experimental feature understands natural language. Instead of searching for keywords, describe what you want to know.", comment: "Hybrid search onboarding screen, description of the natural language search section")
+
+    public static let hybridSearchOnboardingOptInChoiceTitle = WMFLocalizedString("hybrid-search-onboarding-opt-in-choice-title", value: "Beta feature", comment: "Hybrid search onboarding screen, title of the beta feature section")
+
+    public static let hybridSearchOnboardingOptInChoiceDescription = WMFLocalizedString("hybrid-search-onboarding-opt-in-choice-description", value: "Available for a limited time during this experiment.", comment: "Hybrid search onboarding screen, description of the beta feature section")
+
+    public static let hybridSearchOnboardingSearchExampleTitle = WMFLocalizedString("hybrid-search-onboarding-search-example-title", value: "Need inspiration?", comment: "Hybrid search onboarding screen, title of the example search queries section")
+
+    public static let hybridSearchOnboardingSearchExampleDescription = WMFLocalizedString("hybrid-search-onboarding-search-example-description", value: "Use one of the search examples below.", comment: "Hybrid search onboarding screen, description of the example search queries section")
+
+    public static let hybridSearchOnboardingLearnMore = WMFLocalizedString("hybrid-search-onboarding-learn-more", value: "Learn more", comment: "Hybrid search onboarding screen, title of button that opens an informational page about the experiment")
+
+    public static let hybridSearchOnboardingExampleQueryPlutoAsPlanet = WMFLocalizedString("hybrid-search-onboarding-search-example-query-pluto-as-planet", value: "When was Pluto unlisted as a planet?", comment: "Hybrid search onboarding screen, example search query about Pluto")
+
+    public static let hybridSearchOnboardingExampleQueryFirstOlympics = WMFLocalizedString("hybrid-search-onboarding-search-example-query-first-olympics", value: "first Olympics", comment: "Hybrid search onboarding screen, example search query about the Olympics")
+
+    public static let hybridSearchOnboardingExampleQueryRnaVsDna = WMFLocalizedString("hybrid-search-onboarding-search-example-query-rna-vs-dna", value: "RNA vs DNA", comment: "Hybrid search onboarding screen, example search query comparing RNA and DNA")
+
+    public static let hybridSearchOnboardingExampleQueryPineapplePizza = WMFLocalizedString("hybrid-search-onboarding-search-example-query-pineapple-pizza", value: "Why do people put pineapple on pizza?", comment: "Hybrid search onboarding screen, example search query about pineapple on pizza")
+
+    public static let hybridSearchOnboardingExampleQueryBiggestCitiesEurope = WMFLocalizedString("hybrid-search-onboarding-search-example-query-biggest-cities-europe", value: "What are the biggest cities in Europe?", comment: "Hybrid search onboarding screen, example search query about the biggest cities in Europe")
+
     public static let donateThankTitle = WMFLocalizedString("donate-success-title", value: "Thank you!", comment: "Thank you toast title displayed after a user successfully donates.")
     public static let donateThankSubtitle = WMFLocalizedString("donate-success-subtitle", value: "Your generosity means so much to us.", comment: "Thank you toast subtitle displayed after a user successfully donates.")
 
