@@ -550,6 +550,36 @@ public class CommonStrings: NSObject {
 
     public static let hybridSearchOnboardingExampleQueryBiggestCitiesEurope = WMFLocalizedString("hybrid-search-onboarding-search-example-query-biggest-cities-europe", value: "What are the biggest cities in Europe?", comment: "Hybrid search onboarding screen, example search query about the biggest cities in Europe")
 
+    // Hybrid Search experiment search experience
+
+    public static let hybridSearchSearchHint = WMFLocalizedString("hybrid-search-search-hint", value: "Search or ask anything", comment: "Search bar placeholder text shown to users in the hybrid search experiment instead of the standard placeholder")
+
+    public static let hybridSearchSuggestionTitle = WMFLocalizedString("hybrid-search-suggestion-title", value: "Search for:", comment: "Label preceding the user's current query in the hybrid search suggestions list, tappable to run the hybrid search")
+
+    public static let hybridSearchResultsHeaderDescription = WMFLocalizedString("hybrid-search-results-header-description", value: "Sourced from human generated Wikipedia articles", comment: "Hybrid search results screen, description below the beta tag in the semantic results section header")
+
+    public static let hybridSearchResultsRateLabel = WMFLocalizedString("hybrid-search-results-rate-label", value: "Rate this result", comment: "Hybrid search results screen, label next to the thumbs up/down rating buttons on a semantic result card")
+
+    public static let hybridSearchResultsRatedLabel = WMFLocalizedString("hybrid-search-results-rated-label", value: "Rated", comment: "Hybrid search results screen, label shown after the user has rated a semantic result card")
+
+    public static let hybridSearchResultsRateThumbUp = WMFLocalizedString("hybrid-search-results-rate-thumb-up", value: "Rate thumbs up", comment: "Accessibility label for the thumbs up rating button on a hybrid search semantic result card")
+
+    public static let hybridSearchResultsRateThumbDown = WMFLocalizedString("hybrid-search-results-rate-thumb-down", value: "Rate thumbs down", comment: "Accessibility label for the thumbs down rating button on a hybrid search semantic result card")
+
+    public static let hybridSearchResultsEmpty = WMFLocalizedString("hybrid-search-results-empty", value: "Enhanced search is temporarily unavailable.", comment: "Hybrid search results screen, message shown when semantic search results are unavailable")
+
+    public static let hybridSearchNoResultsHeader = WMFLocalizedString("hybrid-search-no-results-header", value: "No results", comment: "Hybrid search results screen, header of the view shown when a search returns no results")
+
+    public static let hybridSearchNoResultsDescription = WMFLocalizedString("hybrid-search-no-results-description", value: "This topic isn't returning article excerpts at this moment. Here are some things you can try:", comment: "Hybrid search results screen, description of the view shown when a search returns no results")
+
+    public static let hybridSearchNoResultsRephraseSuggestion = WMFLocalizedString("hybrid-search-no-results-suggestion-rephrase-text", value: "Rephrase your search", comment: "Hybrid search results screen, suggestion shown when a search returns no results")
+
+    public static let hybridSearchNoResultsRelatedTopicSuggestion = WMFLocalizedString("hybrid-search-no-results-suggestion-try-related-topic", value: "Try a related topic", comment: "Hybrid search results screen, suggestion shown when a search returns no results")
+
+    public static let hybridSearchErrorMessage = WMFLocalizedString("hybrid-search-error-message", value: "Something went wrong. Please try again later.", comment: "Hybrid search results screen, message shown when loading results fails")
+
+    public static let hybridSearchTurnOffExperimentLabel = WMFLocalizedString("hybrid-search-turn-off-experiment-label", value: "Turn off this experiment", comment: "Hybrid search results screen, menu action that turns off the hybrid search experiment")
+
     public static let donateThankTitle = WMFLocalizedString("donate-success-title", value: "Thank you!", comment: "Thank you toast title displayed after a user successfully donates.")
     public static let donateThankSubtitle = WMFLocalizedString("donate-success-subtitle", value: "Your generosity means so much to us.", comment: "Thank you toast subtitle displayed after a user successfully donates.")
 

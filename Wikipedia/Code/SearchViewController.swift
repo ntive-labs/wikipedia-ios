@@ -121,9 +121,17 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
         let vc = SearchResultsViewController(source: source, dataStore: dataStore ?? MWKDataStore.shared())
         vc.apply(theme: theme)
         vc.parentSearchControllerDelegate = self
+        vc.supportsHybridSearch = true
         vc.populateSearchBarAction = { [weak self] searchTerm in
             self?.navigationItem.searchController?.searchBar.text = searchTerm
             self?.navigationItem.searchController?.searchBar.becomeFirstResponder()
+        }
+        vc.setSearchBarTextAction = { [weak self] searchTerm in
+            self?.navigationItem.searchController?.searchBar.text = searchTerm
+            self?.navigationItem.searchController?.searchBar.resignFirstResponder()
+        }
+        vc.hybridSearchExperimentTurnedOffAction = { [weak self] in
+            self?.refreshSearchBarPlaceholder()
         }
         vc.articleTappedAction = { [weak self] articleURL, needsNewTab in
             guard let self, let dataStore, let navVC = navigationController else { return }
@@ -358,6 +366,7 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
 
         hybridSearchDataController.isHybridSearchOnboardingShown = true
         hybridSearchDataController.isHybridSearchEnabled = true
+        refreshSearchBarPlaceholder()
 
         let localizedStrings = WMFHybridSearchOnboardingViewModel.LocalizedStrings(
             betaTag: CommonStrings.hybridSearchBetaTag,
@@ -389,8 +398,9 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
 
         viewModel.onExampleQueryTap = { [weak self] exampleQuery in
             self?.dismiss(animated: true) {
-                // Phase 3: route the example query into the hybrid results screen. For now, trigger a standard search.
-                self?.searchAndMakeResultsVisibleForSearchTerm(exampleQuery, animated: true)
+                guard let self else { return }
+                self.navigationItem.searchController?.isActive = true
+                self.searchResultsVC.enterHybridResultsMode(searchTerm: exampleQuery)
             }
         }
 
@@ -416,6 +426,22 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
 
     // MARK: - Navigation Bar
 
+    /// Mirrors Android's SearchFragment query hint: hybrid search experiment users who have seen
+    /// the onboarding get "Search or ask anything" instead of "Search Wikipedia".
+    private var searchBarPlaceholder: String {
+        let hybridSearchDataController = WMFHybridSearchDataController.shared
+        let languageCode = dataStore?.languageLinkController.appLanguage?.languageCode
+        if hybridSearchDataController.isHybridSearchOnboardingShown,
+           hybridSearchDataController.isHybridSearchActive(languageCode: languageCode) {
+            return CommonStrings.hybridSearchSearchHint
+        }
+        return CommonStrings.searchBarPlaceholder
+    }
+
+    private func refreshSearchBarPlaceholder() {
+        navigationItem.searchController?.searchBar.placeholder = searchBarPlaceholder
+    }
+
     private func configureNavigationBar() {
         let alignment: WMFNavigationBarTitleConfig.Alignment
         if isRootTabView {
@@ -440,8 +466,8 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
             searchResultsController: searchResultsVC,
             searchControllerDelegate: searchResultsVC,
             searchResultsUpdater: searchResultsVC,
-            searchBarDelegate: nil,
-            searchBarPlaceholder: CommonStrings.searchBarPlaceholder,
+            searchBarDelegate: searchResultsVC,
+            searchBarPlaceholder: searchBarPlaceholder,
             showsScopeBar: false,
             scopeButtonTitles: nil
         )
