@@ -1,0 +1,171 @@
+appId: org.wikimedia.wikipedia
+name: Which Came First stays completed after killing the app at the final reveal
+tags:
+  - wikigames
+---
+# Parity check for Android commit fe1486bbed ("Fix subtle Game bug when saving
+# progress on last question"). iOS needs no production change: submitting the
+# final answer already persists the session as completed in the same Core Data
+# save (WMFGamesDataController.submitWhichCameFirstAnswer), and the "See Results"
+# tap does no persistence. This flow proves it: answer all 5 questions, kill the
+# app at the final reveal WITHOUT tapping "See Results", relaunch with state
+# preserved, and verify the game is recorded as completed (feed card shows the
+# score + "Review results", which opens the results screen — no question is
+# re-asked).
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFWikimediaRestAPIBaseURLOverride": "http://localhost:8081/"
+# A fresh feed fetch can be slow; nudge it with a pull-to-refresh if needed.
+- extendedWaitUntil:
+    visible: "Featured article"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible: "Featured article"
+    commands:
+      - swipe:
+          start: 50%, 30%
+          end: 50%, 70%
+      - extendedWaitUntil:
+          visible: "Featured article"
+          timeout: 45000
+# The daily-game availability check fails while the WMFData store is still
+# initializing on a cold start, which removes the games group. Keep doing
+# pull-to-refreshes at the feed top until the warm content-source pass
+# re-creates it.
+- repeat:
+    times: 8
+    while:
+      notVisible: "Games"
+    commands:
+      - swipe:
+          start: 50%, 25%
+          end: 50%, 75%
+      - extendedWaitUntil:
+          visible: "Games"
+          timeout: 20000
+          optional: true
+- scrollUntilVisible:
+    element:
+      text: "Which came first?"
+    timeout: 15000
+    centerElement: true
+- takeScreenshot: .maestro/screenshots/ios-wikigames-complete-card
+# Card -> splash screen -> game.
+- tapOn: "Play today's game"
+- extendedWaitUntil:
+    visible: "About this game"
+    timeout: 15000
+- tapOn: "Play today's game"
+- extendedWaitUntil:
+    visible: "Question 1 of 5"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-complete-q1
+
+# ---- Questions 1-4 ----
+- repeat:
+    times: 4
+    commands:
+      - extendedWaitUntil:
+          notVisible: "Next"
+          timeout: 8000
+      - tapOn:
+          point: 50%, 43%
+      - extendedWaitUntil:
+          visible: "Submit"
+          timeout: 5000
+      - tapOn: "Submit"
+      - extendedWaitUntil:
+          visible: "Next"
+          timeout: 8000
+      - tapOn: "Next"
+
+# ---- Question 5: answer it, but do NOT tap "See Results" ----
+- extendedWaitUntil:
+    visible: "Question 5 of 5"
+    timeout: 8000
+- tapOn:
+    point: 50%, 43%
+- extendedWaitUntil:
+    visible: "Submit"
+    timeout: 5000
+- tapOn: "Submit"
+# The final reveal: the final answer has just been persisted, and on iOS that
+# same save already marks the session completed.
+- extendedWaitUntil:
+    visible: "See Results"
+    timeout: 8000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-complete-q5-revealed
+
+# ---- Kill the app at the final reveal and relaunch (state preserved) ----
+- stopApp
+- launchApp:
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFWikimediaRestAPIBaseURLOverride": "http://localhost:8081/"
+- extendedWaitUntil:
+    visible: "Featured article"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible: "Featured article"
+    commands:
+      - swipe:
+          start: 50%, 30%
+          end: 50%, 70%
+      - extendedWaitUntil:
+          visible: "Featured article"
+          timeout: 45000
+- repeat:
+    times: 8
+    while:
+      notVisible: "Games"
+    commands:
+      - swipe:
+          start: 50%, 25%
+          end: 50%, 75%
+      - extendedWaitUntil:
+          visible: "Games"
+          timeout: 20000
+          optional: true
+- scrollUntilVisible:
+    element:
+      text: "Which came first?"
+    timeout: 15000
+    centerElement: true
+# The session was persisted as completed when the final answer was submitted,
+# so the card must show the completed state — not an in-progress game.
+- extendedWaitUntil:
+    visible: "You scored.*"
+    timeout: 20000
+- assertVisible: "Review results"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-complete-relaunched-card
+- tapOn: "Review results"
+# The splash screen also reflects the completed session: its play button reads
+# "Review results" (pre-fix Android equivalently showed "Continue today's game"
+# / "You're on question 6" here).
+- extendedWaitUntil:
+    visible: "About this game"
+    timeout: 15000
+- assertVisible: "Review results"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-complete-relaunched-splash
+- tapOn: "Review results"
+# Results screen, with no question re-asked.
+- extendedWaitUntil:
+    visible: "You scored.*"
+    timeout: 15000
+- assertVisible: "Articles from today's game"
+- assertNotVisible: "Submit"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-complete-results
