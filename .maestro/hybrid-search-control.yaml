@@ -1,0 +1,28 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search control group sees standard search only
+tags:
+  - mock
+  - hybrid-search
+---
+# Control users must get no onboarding and the standard search experience.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "control"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+- tapOn: "Search"
+# No onboarding interception for control users.
+- assertNotVisible: "A new way to search"
+- assertVisible: "Search Wikipedia"
+- tapOn: "Search Wikipedia"
+- inputText: "maestro"
+# Live lexical search; the Maestro article reliably exists on enwiki.
+- extendedWaitUntil:
+    visible: "Maestro.*"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-control-standard-results

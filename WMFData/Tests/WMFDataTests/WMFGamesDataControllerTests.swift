@@ -20,6 +20,10 @@ final class WMFGamesDataControllerTests: XCTestCase {
     /// Date string for the Feb 21 fixture that only has 3 events (insufficient for 5 pairs).
     let dateWithFewEvents = "2026-02-21"
 
+    /// Date string for the Jun 9 fixture with 9 events: 4 real pairs plus one leftover
+    /// event that needs the synthesized year+10 fallback partner (Android commit e17bbd4e49).
+    let dateWithNineEvents = "2026-06-09"
+
     // MARK: - Setup
 
     override func setUp() async throws {
@@ -49,6 +53,10 @@ final class WMFGamesDataControllerTests: XCTestCase {
 
     private func onThisDayControllerWithFewEvents() -> WMFOnThisDayDataController {
         makeOnThisDayController(fixture: "onthisday-events-02-21-get")
+    }
+
+    private func onThisDayControllerWithNineEvents() -> WMFOnThisDayDataController {
+        makeOnThisDayController(fixture: "onthisday-events-06-09-get")
     }
 
     // MARK: - fetchOrStartWhichCameFirstDailySession Tests
@@ -352,6 +360,51 @@ final class WMFGamesDataControllerTests: XCTestCase {
         )
 
         XCTAssertFalse(isAvailable)
+    }
+
+    func testIsAvailableReturnsTrueWhenFallbackPairingFillsQuestions() async throws {
+        guard let dataController else { throw TestsError.missingDataController }
+
+        let isAvailable = try await dataController.isWhichCameFirstDailySessionAvailable(
+            date: dateWithNineEvents,
+            project: enProject,
+            onThisDayDataController: onThisDayControllerWithNineEvents()
+        )
+
+        XCTAssertTrue(isAvailable)
+    }
+
+    func testWhichCameFirstSessionWithInsufficientEvents() async throws {
+        guard let dataController else { throw TestsError.missingDataController }
+
+        // 9 events pair into 4 real questions; the leftover event must be paired with
+        // a synthesized blank event dated 10 years later instead of failing the day
+        // with CustomError.insufficientQuestions (Android parity: e17bbd4e49).
+        let (gameState, _) = try await dataController.fetchOrStartWhichCameFirstDailySession(
+            date: dateWithNineEvents,
+            project: enProject,
+            onThisDayDataController: onThisDayControllerWithNineEvents()
+        )
+
+        XCTAssertEqual(gameState.questions.count, 5)
+
+        let fallbackQuestion = try XCTUnwrap(gameState.questions.first { question in
+            question.optionA.title.isEmpty || question.optionB.title.isEmpty
+        })
+        let blank = fallbackQuestion.optionA.title.isEmpty ? fallbackQuestion.optionA : fallbackQuestion.optionB
+        let real = fallbackQuestion.optionA.title.isEmpty ? fallbackQuestion.optionB : fallbackQuestion.optionA
+
+        XCTAssertNil(blank.articleTitle)
+        XCTAssertNil(blank.thumbnailURL)
+
+        let calendar = Calendar(identifier: .gregorian)
+        let blankYear = calendar.component(.year, from: blank.date)
+        let realYear = calendar.component(.year, from: real.date)
+        XCTAssertEqual(blankYear, realYear + 10)
+
+        // The real event always came first.
+        let correctOption = fallbackQuestion.correctAnswer == "A" ? fallbackQuestion.optionA : fallbackQuestion.optionB
+        XCTAssertFalse(correctOption.title.isEmpty)
     }
 
     // MARK: - fetchWhichCameFirstStats Tests
