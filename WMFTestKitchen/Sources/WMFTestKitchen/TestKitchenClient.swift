@@ -24,8 +24,8 @@ public class TestKitchenClient {
         return InstrumentImpl(name: name, client: self)
     }
 
-    public func submitInteraction(instrument: InstrumentImpl, interactionData: InteractionData) {
-        let clientData = getClientData(mediawikiDatabase: interactionData.mediawikiDatabase)
+    public func submitInteraction(instrument: InstrumentImpl, interactionData: InteractionData, pageData: PageData? = nil) {
+        let clientData = getClientData(mediawikiDatabase: interactionData.mediawikiDatabase, pageData: pageData)
         let event = Event(
             schema: TestKitchenClient.schemaAppBase,
             stream: TestKitchenClient.streamAppBase,
@@ -46,9 +46,10 @@ public class TestKitchenClient {
 
     // MARK: - Private
 
-    private func getClientData(mediawikiDatabase: String?) -> ClientData {
+    private func getClientData(mediawikiDatabase: String?, pageData: PageData? = nil) -> ClientData {
         return ClientData(
             agentData: clientDataCallback.getAgentData(),
+            pageData: pageData,
             mediawikiData: mediawikiDatabase != nil ? MediawikiData(database: mediawikiDatabase) : clientDataCallback.getMediawikiData(),
             performerData: clientDataCallback.getPerformerData()
         )

@@ -17,8 +17,19 @@ final class WMFGamesDataControllerTests: XCTestCase {
     /// Date string with enough On This Day events in the May 7 fixture (55 events).
     let dateWithEnoughEvents = "2026-05-07"
 
-    /// Date string for the Feb 21 fixture that only has 3 events (insufficient for 5 pairs).
+    /// Date string for the Feb 21 fixture that only has 3 events (fewer than 5 pairs).
+    /// Since Android commit 4824d3a9f7, days like this recycle events from a copy of
+    /// the pool and still produce a full set of questions.
     let dateWithFewEvents = "2026-02-21"
+
+    /// Date string for the Jun 9 fixture with 9 events: 4 real pairs plus one leftover
+    /// event whose partner is recycled from the pool copy (Android commit 4824d3a9f7;
+    /// previously a synthesized blank year+10 event, e17bbd4e49).
+    let dateWithNineEvents = "2026-06-09"
+
+    /// Date string for the Mar 15 fixture whose 3 events all share one year, so no
+    /// question can ever be formed and the day must stay unavailable.
+    let dateWithSameYearEvents = "2026-03-15"
 
     // MARK: - Setup
 
@@ -49,6 +60,14 @@ final class WMFGamesDataControllerTests: XCTestCase {
 
     private func onThisDayControllerWithFewEvents() -> WMFOnThisDayDataController {
         makeOnThisDayController(fixture: "onthisday-events-02-21-get")
+    }
+
+    private func onThisDayControllerWithNineEvents() -> WMFOnThisDayDataController {
+        makeOnThisDayController(fixture: "onthisday-events-06-09-get")
+    }
+
+    private func onThisDayControllerWithSameYearEvents() -> WMFOnThisDayDataController {
+        makeOnThisDayController(fixture: "onthisday-events-03-15-get")
     }
 
     // MARK: - fetchOrStartWhichCameFirstDailySession Tests
@@ -342,16 +361,102 @@ final class WMFGamesDataControllerTests: XCTestCase {
         XCTAssertTrue(isAvailable)
     }
 
-    func testIsAvailableReturnsFalseWhenAPIHasInsufficientEvents() async throws {
+    func testIsAvailableReturnsTrueWhenEventsAreRecycled() async throws {
         guard let dataController else { throw TestsError.missingDataController }
 
+        // 3 distinct-year events used to be insufficient for 5 questions; since
+        // Android commit 4824d3a9f7 the pairing loop recycles events from a copy
+        // of the pool, so the day is now playable.
         let isAvailable = try await dataController.isWhichCameFirstDailySessionAvailable(
             date: dateWithFewEvents,
             project: enProject,
             onThisDayDataController: onThisDayControllerWithFewEvents()
         )
 
+        XCTAssertTrue(isAvailable)
+    }
+
+    func testIsAvailableReturnsFalseWhenAllEventsShareOneYear() async throws {
+        guard let dataController else { throw TestsError.missingDataController }
+
+        // Same-year events can never form a question, even with recycling.
+        let isAvailable = try await dataController.isWhichCameFirstDailySessionAvailable(
+            date: dateWithSameYearEvents,
+            project: enProject,
+            onThisDayDataController: onThisDayControllerWithSameYearEvents()
+        )
+
         XCTAssertFalse(isAvailable)
+    }
+
+    func testIsAvailableReturnsTrueWhenFallbackPairingFillsQuestions() async throws {
+        guard let dataController else { throw TestsError.missingDataController }
+
+        let isAvailable = try await dataController.isWhichCameFirstDailySessionAvailable(
+            date: dateWithNineEvents,
+            project: enProject,
+            onThisDayDataController: onThisDayControllerWithNineEvents()
+        )
+
+        XCTAssertTrue(isAvailable)
+    }
+
+    func testWhichCameFirstSessionWithInsufficientEvents() async throws {
+        guard let dataController else { throw TestsError.missingDataController }
+
+        // 9 events pair into 4 real questions; the leftover event's partner is
+        // recycled from the pool copy (Android parity: 4824d3a9f7) — a real,
+        // already-used event, not the former synthesized blank year+10 card.
+        let (gameState, _) = try await dataController.fetchOrStartWhichCameFirstDailySession(
+            date: dateWithNineEvents,
+            project: enProject,
+            onThisDayDataController: onThisDayControllerWithNineEvents()
+        )
+
+        XCTAssertEqual(gameState.questions.count, 5)
+
+        // No blank synthesized options anywhere.
+        for question in gameState.questions {
+            XCTAssertFalse(question.optionA.title.isEmpty)
+            XCTAssertFalse(question.optionB.title.isEmpty)
+        }
+
+        // With 9 events and 5 questions, exactly one event must appear twice.
+        let titles = gameState.questions.flatMap { [$0.optionA.title, $0.optionB.title] }
+        XCTAssertEqual(titles.count, 10)
+        XCTAssertEqual(Set(titles).count, 9)
+
+        // The recycled partner can predate its event1, so every correct answer
+        // must match the earlier option date.
+        for question in gameState.questions {
+            let earlier = question.optionA.date < question.optionB.date ? "A" : "B"
+            XCTAssertEqual(question.correctAnswer, earlier)
+        }
+    }
+
+    func testWhichCameFirstSessionRecyclesEventsWhenPoolRunsOut() async throws {
+        guard let dataController else { throw TestsError.missingDataController }
+
+        // Only 3 events: the pool is exhausted after question 1, so event1 itself
+        // is recycled via poolCopy[index % poolCopy.count] and partners come from
+        // the pool copy (Android parity: 4824d3a9f7). Previously this day threw
+        // CustomError.insufficientQuestions.
+        let (gameState, _) = try await dataController.fetchOrStartWhichCameFirstDailySession(
+            date: dateWithFewEvents,
+            project: enProject,
+            onThisDayDataController: onThisDayControllerWithFewEvents()
+        )
+
+        XCTAssertEqual(gameState.questions.count, 5)
+
+        for question in gameState.questions {
+            XCTAssertFalse(question.optionA.title.isEmpty)
+            XCTAssertFalse(question.optionB.title.isEmpty)
+            // Options within a question always have distinct years.
+            XCTAssertNotEqual(question.optionA.date, question.optionB.date)
+            let earlier = question.optionA.date < question.optionB.date ? "A" : "B"
+            XCTAssertEqual(question.correctAnswer, earlier)
+        }
     }
 
     // MARK: - fetchWhichCameFirstStats Tests

@@ -750,6 +750,10 @@ extension WMFAppViewController {
             return Locale.acceptLanguageHeaderForPreferredLanguages
         }
 
+        WMFDataEnvironment.current.httpErrorLoggingUtility = { url, method, statusCode in
+            ClientErrorFunnel.shared.logHttpResponse(url: url, method: method, statusCode: statusCode)
+        }
+
         WMFDataEnvironment.current.sharedCacheStore = SharedContainerCacheStore()
 
         let languages = dataStore.languageLinkController.preferredLanguages.map { WMFLanguage(languageCode: $0.languageCode, languageVariantCode: $0.languageVariantCode) }
