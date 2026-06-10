@@ -2,8 +2,11 @@ import SwiftUI
 
 public struct WMFHybridSearchResultsView: View {
 
+    private static let semanticScrollCoordinateSpace = "hybridSearchSemanticScroll"
+
     @ObservedObject var viewModel: WMFHybridSearchResultsViewModel
     @ObservedObject var appEnvironment = WMFAppEnvironment.current
+    @State private var semanticViewportWidth: CGFloat = 0
 
     private var theme: WMFTheme {
         return appEnvironment.theme
@@ -93,7 +96,7 @@ public struct WMFHybridSearchResultsView: View {
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 16) {
-                    ForEach(viewModel.semanticItems) { item in
+                    ForEach(Array(viewModel.semanticItems.enumerated()), id: \.element.id) { index, item in
                         WMFHybridSearchSemanticCard(
                             item: item,
                             theme: theme,
@@ -103,8 +106,25 @@ public struct WMFHybridSearchResultsView: View {
                             onTap: {
                                 viewModel.onTapSemantic(item)
                             },
+                            onSnippetLinkTap: { url in
+                                viewModel.onTapSemanticLink(url, item)
+                            },
                             onRate: { isUp in
                                 viewModel.rate(item: item, isUp: isUp)
+                            }
+                        )
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear
+                                    .onAppear {
+                                        reportSemanticCardIfVisible(item: item, index: index, frame: geometry.frame(in: .named(Self.semanticScrollCoordinateSpace)))
+                                    }
+                                    .onChange(of: geometry.frame(in: .named(Self.semanticScrollCoordinateSpace))) { _, newFrame in
+                                        reportSemanticCardIfVisible(item: item, index: index, frame: newFrame)
+                                    }
+                                    .onChange(of: semanticViewportWidth) { _, _ in
+                                        reportSemanticCardIfVisible(item: item, index: index, frame: geometry.frame(in: .named(Self.semanticScrollCoordinateSpace)))
+                                    }
                             }
                         )
                     }
@@ -113,7 +133,36 @@ public struct WMFHybridSearchResultsView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
             }
+            .coordinateSpace(name: Self.semanticScrollCoordinateSpace)
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .onAppear {
+                            semanticViewportWidth = geometry.size.width
+                        }
+                        .onChange(of: geometry.size.width) { _, newWidth in
+                            semanticViewportWidth = newWidth
+                        }
+                }
+            )
         }
+    }
+
+    /// Reports a semantic card to the view model when at least half of its width is within the
+    /// horizontal scroller's viewport. The view model dedupes per card per result set.
+    private func reportSemanticCardIfVisible(item: WMFHybridSearchSemanticItem, index: Int, frame: CGRect) {
+        guard semanticViewportWidth > 0, frame.width > 0 else {
+            return
+        }
+
+        let visibleStart = max(frame.minX, 0)
+        let visibleEnd = min(frame.maxX, semanticViewportWidth)
+        let visibleWidth = max(visibleEnd - visibleStart, 0)
+        guard visibleWidth / frame.width >= 0.5 else {
+            return
+        }
+
+        viewModel.reportSemanticCardVisible(item: item, index: index)
     }
 
     // MARK: - Empty / Error
@@ -215,6 +264,7 @@ struct WMFHybridSearchSemanticCard: View {
     let thumbsUpAccessibilityLabel: String
     let thumbsDownAccessibilityLabel: String
     let onTap: () -> Void
+    let onSnippetLinkTap: (URL) -> Void
     let onRate: (Bool) -> Void
 
     private var snippetStyles: HtmlUtils.Styles {
@@ -253,6 +303,10 @@ struct WMFHybridSearchSemanticCard: View {
 
     private var snippet: some View {
         WMFHtmlText(html: item.snippetHTML, styles: snippetStyles)
+            .environment(\.openURL, OpenURLAction { url in
+                onSnippetLinkTap(url)
+                return .handled
+            })
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

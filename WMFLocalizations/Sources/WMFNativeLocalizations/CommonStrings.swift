@@ -568,6 +568,8 @@ public class CommonStrings: NSObject {
 
     public static let hybridSearchResultsEmpty = WMFLocalizedString("hybrid-search-results-empty", value: "Enhanced search is temporarily unavailable.", comment: "Hybrid search results screen, message shown when semantic search results are unavailable")
 
+    public static let hybridSearchLexicalResultsEmpty = WMFLocalizedString("hybrid-search-lexical-results-empty", value: "No article title matches this query.", comment: "Hybrid search results screen, message describing that no article titles match the search query")
+
     public static let hybridSearchNoResultsHeader = WMFLocalizedString("hybrid-search-no-results-header", value: "No results", comment: "Hybrid search results screen, header of the view shown when a search returns no results")
 
     public static let hybridSearchNoResultsDescription = WMFLocalizedString("hybrid-search-no-results-description", value: "This topic isn't returning article excerpts at this moment. Here are some things you can try:", comment: "Hybrid search results screen, description of the view shown when a search returns no results")

@@ -19,9 +19,9 @@ public struct WMFHybridSearchSuggestionsView: View {
         VStack(spacing: 0) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(viewModel.titles, id: \.self) { title in
+                    ForEach(Array(viewModel.titles.enumerated()), id: \.offset) { index, title in
                         Button {
-                            viewModel.onSuggestionTap(title)
+                            viewModel.onSuggestionTap(title, index)
                         } label: {
                             Text(title.wmfAttributedString(boldingFirstMatchOf: viewModel.searchTerm, font: WMFFont.for(.callout), boldFont: WMFFont.for(.boldCallout)))
                                 .foregroundStyle(Color(theme.text))
@@ -81,7 +81,7 @@ public struct WMFHybridSearchSuggestionsView: View {
     let viewModel = WMFHybridSearchSuggestionsViewModel(
         titles: ["Pluto", "Pluto (mythology)", "Plutonium", "Plutarch"],
         searchTerm: "pluto",
-        onSuggestionTap: { _ in },
+        onSuggestionTap: { _, _ in },
         onSearchForTap: { _ in }
     )
 
@@ -92,7 +92,7 @@ public struct WMFHybridSearchSuggestionsView: View {
     let viewModel = WMFHybridSearchSuggestionsViewModel(
         titles: ["Pluto", "IAU definition of planet"],
         searchTerm: "When was Pluto unlisted as a planet?",
-        onSuggestionTap: { _ in },
+        onSuggestionTap: { _, _ in },
         onSearchForTap: { _ in }
     )
 

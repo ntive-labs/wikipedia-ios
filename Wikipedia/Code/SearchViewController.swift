@@ -9,8 +9,10 @@ import WMFTestKitchen
 
 /// Standalone view controller for searching Wikipedia articles. Designed to be used within a navigation controller, as its search bar leans on navigationItem.searchController behavior.
 class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring, MEPEventsProviding, ShareableArticlesProvider, SearchResultsHosting {
-    
+
     let source: SearchResultsViewController.EventLoggingSource
+
+    private let searchInstrument: InstrumentImpl
 
     // MARK: - MEP / Hint
 
@@ -122,6 +124,7 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
         vc.apply(theme: theme)
         vc.parentSearchControllerDelegate = self
         vc.supportsHybridSearch = true
+        vc.searchInstrument = searchInstrument
         vc.populateSearchBarAction = { [weak self] searchTerm in
             self?.navigationItem.searchController?.searchBar.text = searchTerm
             self?.navigationItem.searchController?.searchBar.becomeFirstResponder()
@@ -287,6 +290,10 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
     
     @objc init(source: SearchResultsViewController.EventLoggingSource) {
         self.source = source
+        self.searchInstrument = TestKitchenAdapter.shared.client
+            .getInstrument(name: "apps-search")
+            .startFunnel(name: "search")
+            .setExperiment(TestKitchenAdapter.shared.getHybridSearchExperiment())
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -297,7 +304,9 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
     override func viewDidLoad() {
         super.viewDidLoad()
         view.accessibilityIdentifier = AccessibilityIdentifiers.Search.view
-        
+
+        searchInstrument.submitInteraction(action: "search_impression", actionSource: source.stringValue)
+
         // Apply configuration properties to the container now that it's initialized
         searchResultsVC.showLanguageBar = showLanguageBar
         if let siteURL { searchResultsVC.siteURL = siteURL }
@@ -368,6 +377,13 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
         hybridSearchDataController.isHybridSearchEnabled = true
         refreshSearchBarPlaceholder()
 
+        let onboardingInstrument = TestKitchenAdapter.shared.client
+            .getInstrument(name: "apps-search")
+            .startFunnel(name: "hybrid_search_onboarding")
+            .setExperiment(TestKitchenAdapter.shared.getHybridSearchExperiment())
+
+        onboardingInstrument.submitInteraction(action: "impression", actionSource: "hybrid_search_onboarding")
+
         let localizedStrings = WMFHybridSearchOnboardingViewModel.LocalizedStrings(
             betaTag: CommonStrings.hybridSearchBetaTag,
             title: CommonStrings.hybridSearchOnboardingScreenTitle,
@@ -391,12 +407,16 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
         let viewModel = WMFHybridSearchOnboardingViewModel(localizedStrings: localizedStrings, languageCode: languageCode)
 
         viewModel.onGetStarted = { [weak self] in
+            onboardingInstrument.submitInteraction(action: "click", actionSource: "hybrid_search_onboarding", elementId: "start_button")
+
             self?.dismiss(animated: true) {
                 self?.makeSearchBarBecomeFirstResponder()
             }
         }
 
         viewModel.onExampleQueryTap = { [weak self] exampleQuery in
+            onboardingInstrument.submitInteraction(action: "click", actionSource: "hybrid_search_onboarding", elementId: "onboarding_query", actionContext: ["query": exampleQuery])
+
             self?.dismiss(animated: true) {
                 guard let self else { return }
                 self.navigationItem.searchController?.isActive = true
@@ -405,6 +425,8 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
         }
 
         viewModel.onLearnMore = { [weak self] in
+            onboardingInstrument.submitInteraction(action: "click", actionSource: "hybrid_search_onboarding", elementId: "learn_button")
+
             self?.navigate(to: URL(string: "https://www.mediawiki.org/wiki/Readers/Information_Retrieval/Phase_1"), useSafari: true)
         }
 

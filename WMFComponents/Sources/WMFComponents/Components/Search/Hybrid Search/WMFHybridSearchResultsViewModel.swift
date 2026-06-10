@@ -49,14 +49,17 @@ public struct WMFHybridSearchSemanticItem: Identifiable, Equatable {
     public let title: String
     public let description: String?
     public let thumbnailURL: URL?
+    /// Anchor of the article section this snippet was sourced from, if any.
+    public let fragment: String?
     public var rating: Rating
 
-    public init(id: String, snippetHTML: String, title: String, description: String? = nil, thumbnailURL: URL? = nil, rating: Rating = .none) {
+    public init(id: String, snippetHTML: String, title: String, description: String? = nil, thumbnailURL: URL? = nil, fragment: String? = nil, rating: Rating = .none) {
         self.id = id
         self.snippetHTML = snippetHTML
         self.title = title
         self.description = description
         self.thumbnailURL = thumbnailURL
+        self.fragment = fragment
         self.rating = rating
     }
 }
@@ -117,13 +120,23 @@ public final class WMFHybridSearchResultsViewModel: ObservableObject {
 
     @Published public var loadState: WMFHybridSearchLoadState
     @Published public var lexicalItems: [WMFHybridSearchLexicalItem]
-    @Published public var semanticItems: [WMFHybridSearchSemanticItem]
+    @Published public var semanticItems: [WMFHybridSearchSemanticItem] {
+        didSet {
+            if oldValue.map(\.id) != semanticItems.map(\.id) {
+                impressedSemanticCardIDs.removeAll()
+            }
+        }
+    }
 
     let onTapLexical: (WMFHybridSearchLexicalItem) -> Void
     let onTapSemantic: (WMFHybridSearchSemanticItem) -> Void
+    let onTapSemanticLink: (URL, WMFHybridSearchSemanticItem) -> Void
+    let onSemanticCardImpression: (WMFHybridSearchSemanticItem, Int) -> Void
     let onRate: (WMFHybridSearchSemanticItem, Bool) -> Void
     let onLearnMore: () -> Void
     let onTurnOffExperiment: () -> Void
+
+    private var impressedSemanticCardIDs: Set<String> = []
 
     public init(
         group: WMFHybridSearchGroup,
@@ -133,6 +146,8 @@ public final class WMFHybridSearchResultsViewModel: ObservableObject {
         localizedStrings: LocalizedStrings = LocalizedStrings(),
         onTapLexical: @escaping (WMFHybridSearchLexicalItem) -> Void,
         onTapSemantic: @escaping (WMFHybridSearchSemanticItem) -> Void,
+        onTapSemanticLink: @escaping (URL, WMFHybridSearchSemanticItem) -> Void = { _, _ in },
+        onSemanticCardImpression: @escaping (WMFHybridSearchSemanticItem, Int) -> Void = { _, _ in },
         onRate: @escaping (WMFHybridSearchSemanticItem, Bool) -> Void,
         onLearnMore: @escaping () -> Void,
         onTurnOffExperiment: @escaping () -> Void
@@ -144,9 +159,21 @@ public final class WMFHybridSearchResultsViewModel: ObservableObject {
         self.localizedStrings = localizedStrings
         self.onTapLexical = onTapLexical
         self.onTapSemantic = onTapSemantic
+        self.onTapSemanticLink = onTapSemanticLink
+        self.onSemanticCardImpression = onSemanticCardImpression
         self.onRate = onRate
         self.onLearnMore = onLearnMore
         self.onTurnOffExperiment = onTurnOffExperiment
+    }
+
+    /// Reports a semantic card as visible (≥50% within the horizontal scroller), notifying via
+    /// `onSemanticCardImpression` once per card per result set.
+    func reportSemanticCardVisible(item: WMFHybridSearchSemanticItem, index: Int) {
+        guard impressedSemanticCardIDs.insert(item.id).inserted else {
+            return
+        }
+
+        onSemanticCardImpression(item, index)
     }
 
     /// Records a rating for a semantic item (first rating wins, mirroring Android) and notifies via `onRate`.

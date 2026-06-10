@@ -14,14 +14,14 @@ public final class WMFHybridSearchSuggestionsViewModel: ObservableObject {
     @Published public var searchTerm: String
 
     public let localizedStrings: LocalizedStrings
-    let onSuggestionTap: (String) -> Void
+    let onSuggestionTap: (String, Int) -> Void
     let onSearchForTap: (String) -> Void
 
     public init(
         titles: [String] = [],
         searchTerm: String = "",
         localizedStrings: LocalizedStrings = LocalizedStrings(),
-        onSuggestionTap: @escaping (String) -> Void,
+        onSuggestionTap: @escaping (String, Int) -> Void,
         onSearchForTap: @escaping (String) -> Void
     ) {
         self.titles = titles

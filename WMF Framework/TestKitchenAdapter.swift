@@ -171,6 +171,12 @@ import CocoaLumberjackSwift
                 print("\n\n🧑‍🍳TestKitchen: Scheduling event to be sent to \(event.schema):")
                 print("\(printablePayload)")
             }
+
+            // Single-line event log in the unified log, for test assertions.
+            if let lineData = try? JSONEncoder().encode(event),
+               let line = String(data: lineData, encoding: .utf8) {
+                NSLog("TKEV %@", line)
+            }
 #endif
             
             storageManager.push(data: data, stream: .productMetricsAppBase)
