@@ -1,0 +1,104 @@
+appId: org.wikimedia.wikipedia
+name: Dark-mode image dimming (native imageOpacity via Theme.dimmedImageOpacity)
+tags:
+  - theme
+---
+# Mirrors apps-android-wikipedia/.maestro/image-dimming.yaml: Dark theme with
+# "Dim images", captured on the App theme settings screen (deterministic local
+# example image) and on live search results (native thumbnail image views).
+# Hybrid search forced to control so the standard search screen appears.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "control"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+# Settings -> App theme.
+- tapOn:
+    id: "profile-button"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "App theme"
+    timeout: 10000
+- tapOn: "App theme"
+- extendedWaitUntil:
+    visible: "Dim images"
+    timeout: 10000
+- tapOn: "Dark"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Dim images off: undimmed example image (also the quantitative reference).
+- takeScreenshot: .maestro/screenshots/ios-image-dimming-theme-off
+# The switch is the second "Dim images" element (the first is the cell label).
+- tapOn:
+    text: "Dim images"
+    index: 1
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: .maestro/screenshots/ios-image-dimming-theme-on
+# Search results: native thumbnails are dimmed (imageView.alpha).
+- extendedWaitUntil:
+    visible:
+      id: "BackButton"
+    timeout: 10000
+- tapOn:
+    id: "BackButton"
+# Dismiss Settings (X button, top right of the settings nav bar).
+- tapOn:
+    point: "91%, 10%"
+- tapOn:
+    text: "Search"
+    index: 0
+- tapOn: "Search Wikipedia"
+- inputText: "earth"
+- extendedWaitUntil:
+    visible: "Earth"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: .maestro/screenshots/ios-image-dimming-search-on
+# Turn dimming back off and re-capture the same results undimmed.
+- tapOn: "Close"
+- tapOn:
+    id: "profile-button"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "App theme"
+    timeout: 10000
+- tapOn: "App theme"
+- extendedWaitUntil:
+    visible: "Dim images"
+    timeout: 10000
+- tapOn:
+    text: "Dim images"
+    index: 1
+- waitForAnimationToEnd:
+    timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: "BackButton"
+    timeout: 10000
+- tapOn:
+    id: "BackButton"
+# Dismiss Settings (X button, top right of the settings nav bar).
+- tapOn:
+    point: "91%, 10%"
+- tapOn:
+    text: "Search"
+    index: 0
+- runFlow:
+    when:
+      notVisible: "Earth"
+    commands:
+      - tapOn: "Search Wikipedia"
+      - inputText: "earth"
+- extendedWaitUntil:
+    visible: "Earth"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: .maestro/screenshots/ios-image-dimming-search-off

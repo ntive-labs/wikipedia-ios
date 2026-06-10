@@ -919,7 +919,7 @@ public class Theme: NSObject {
         return [NSAttributedString.Key.foregroundColor: colors.chromeText]
     }()
     
-    public static let dimmedImageOpacity: CGFloat = 0.65
+    public static let dimmedImageOpacity: CGFloat = 0.8
     @objc public let imageOpacity: CGFloat
     @objc public let cardBorderWidthInPixels: Int
     @objc public let cardShadowOpacity: Float

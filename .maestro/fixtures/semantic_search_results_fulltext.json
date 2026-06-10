@@ -1,0 +1,33 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "pages": [
+      {
+        "pageid": 200001,
+        "ns": 0,
+        "title": "Pluto",
+        "index": 1,
+        "description": "Dwarf planet in the outer Solar System",
+        "snippet": "In 2006, the International Astronomical Union (IAU) adopted a formal definition of <b>planet</b>. Pluto does not clear the neighborhood around its orbit, so it was reclassified as a <i>dwarf planet</i>.",
+        "sectiontitle": "Classification"
+      },
+      {
+        "pageid": 200002,
+        "ns": 0,
+        "title": "IAU definition of planet",
+        "index": 2,
+        "description": "Formal definition adopted in 2006",
+        "snippet": "The definition adopted on 24 August 2006 states that a <b>planet</b> must orbit the Sun, be rounded by its own gravity, and have cleared the neighbourhood around its orbit.",
+        "sectiontitle": "Final definition"
+      },
+      {
+        "pageid": 200003,
+        "ns": 0,
+        "title": "Dwarf planet",
+        "index": 3,
+        "description": "Small planetary-mass object in direct orbit around the Sun",
+        "snippet": "A <b>dwarf planet</b> is a small planetary-mass object in direct orbit around the Sun, smaller than the eight classical planets but still a world in its own right."
+      }
+    ]
+  }
+}

@@ -1455,7 +1455,10 @@ extension ExploreViewController: ExploreCardCollectionViewCellDelegate {
         guard group.contentGroupKind.isCustomizable || group.contentGroupKind.isGlobal else {
             return nil
         }
-        let hideThisCardHidesAll = group.contentGroupKind.isGlobal && group.contentGroupKind.isNonDateBased
+        // The daily game card is singular like the global non-date-based cards: hiding it
+        // disables the games feed setting (with undo re-enabling), rather than hiding one
+        // instance that would reappear on the next feed update.
+        let hideThisCardHidesAll = (group.contentGroupKind.isGlobal && group.contentGroupKind.isNonDateBased) || group.contentGroupKind == .dailyGame
 
         let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         let customizeExploreFeed = UIAlertAction(title: CommonStrings.customizeExploreFeedTitle, style: .default) { (_) in
