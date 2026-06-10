@@ -1,16 +1,16 @@
 appId: org.wikimedia.wikipedia
-name: Which Came First plays through a day with insufficient On This Day events
+name: Which Came First plays a full game on a day with only 3 events (recycled pairing)
 tags:
   - wikigames
 ---
-# The fixture server (run-wikigames-insufficient.sh) serves only 9 usable
-# On This Day events (4 real pairs + 1 leftover). Pre-port, the pairing loop
-# produced 4 questions, fetchOrStartWhichCameFirstDailySession threw
-# insufficientQuestions, the feed card was hidden, and entering the game any
-# other way locked on the error screen. With the e17bbd4e49 port the leftover
-# event paired with a synthesized blank year+10 event; since the 4824d3a9f7
-# port it instead pairs with a recycled real event drawn from a copy of the
-# pool. Either way the game completes normally.
+# The fixture server (run-wikigames-recycled.sh) serves only 3 usable On This
+# Day events. Pre-port, the pairing loop exhausted the pool after question 2
+# (question 2 used the synthesized blank fallback), produced fewer than 5
+# questions, and fetchOrStartWhichCameFirstDailySession threw
+# insufficientQuestions: the feed card was hidden and the game was unplayable.
+# With the port (Android 4824d3a9f7) events are recycled from a copy of the
+# pool (poolCopy[index % count] for event1, any different-year copy event as
+# the partner fallback), so the day yields a full 5-question game.
 - launchApp:
     clearState: true
     arguments:
@@ -38,8 +38,8 @@ tags:
 # The daily-game availability check fails while the WMFData store is still
 # initializing on a cold start, which removes the games group. Keep doing
 # pull-to-refreshes at the feed top until the warm content-source pass
-# re-creates it. With only 9 events this availability check passing at all
-# is part of the fix under test.
+# re-creates it. With only 3 events this availability check passing at all
+# is part of the fix under test (recycling fills all 5 questions).
 - repeat:
     times: 8
     while:
@@ -57,20 +57,20 @@ tags:
       text: "Which came first?"
     timeout: 15000
     centerElement: true
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-card
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-card
 # Card -> splash screen.
 - tapOn: "Play today's game"
 - extendedWaitUntil:
     visible: "About this game"
     timeout: 15000
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-menu
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-menu
 # Splash -> game. Question 1 must load instead of the error screen.
 - tapOn: "Play today's game"
 - extendedWaitUntil:
     visible: "Question 1 of 5"
     timeout: 15000
 - assertNotVisible: "Something went wrong"
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q1
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-q1
 - tapOn:
     point: 50%, 43%
 - extendedWaitUntil:
@@ -80,16 +80,17 @@ tags:
 - extendedWaitUntil:
     visible: "Next"
     timeout: 8000
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q1-revealed
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-q1-revealed
 - tapOn: "Next"
 
-# ---- Questions 2-4 ----
+# ---- Questions 2-4: pool exhausted, every pair is recycled ----
 - repeat:
     times: 3
     commands:
       - extendedWaitUntil:
           notVisible: "Next"
           timeout: 8000
+      - assertNotVisible: "Something went wrong"
       - tapOn:
           point: 50%, 43%
       - extendedWaitUntil:
@@ -101,12 +102,12 @@ tags:
           timeout: 8000
       - tapOn: "Next"
 
-# ---- Question 5: the leftover event paired with a recycled real event ----
+# ---- Question 5: still a real recycled pair, no error, no blank card ----
 - extendedWaitUntil:
     visible: "Question 5 of 5"
     timeout: 8000
 - assertNotVisible: "Something went wrong"
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q5-fallback
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-q5
 - tapOn:
     point: 50%, 43%
 - extendedWaitUntil:
@@ -116,12 +117,12 @@ tags:
 - extendedWaitUntil:
     visible: "See Results"
     timeout: 8000
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q5-revealed
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-q5-revealed
 - tapOn: "See Results"
 
-# ---- Results: the game completed instead of locking on the error screen ----
+# ---- Results: the 3-event day completed instead of being unavailable ----
 - extendedWaitUntil:
     visible: "You scored.*"
     timeout: 15000
 - assertVisible: "Articles from today's game"
-- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-results
+- takeScreenshot: .maestro/screenshots/ios-wikigames-recycled-results
