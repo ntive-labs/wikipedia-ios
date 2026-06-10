@@ -30,6 +30,18 @@ ROUTES = [
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def _respond(self):
+        # Deterministic HTTP failure (client-error-logging flows): any request
+        # mentioning this magic term gets a 404, which the app's HTTP layer must
+        # report to the mediawiki.client.error logging-intake stream.
+        if "errortrigger" in self.path:
+            sys.stderr.write("[fixture] %s %s -> 404\n" % (self.command, self.path[:120]))
+            body = b"{}"
+            self.send_response(404)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         body = b"{}"
         matched = "(default empty)"
         for fragment, fixture in ROUTES:
