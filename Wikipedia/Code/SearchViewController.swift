@@ -431,7 +431,7 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
         }
 
         viewModel.onLearnMore = { [weak self] in
-            onboardingInstrument.submitInteraction(action: "click", actionSource: "hybrid_search_onboarding", elementId: "learn_button")
+            onboardingInstrument.submitInteraction(action: "click", actionSource: "hybrid_search_onboarding", elementId: "learn_more")
 
             self?.navigate(to: URL(string: "https://www.mediawiki.org/wiki/Readers/Information_Retrieval/Phase_1"), useSafari: true)
         }

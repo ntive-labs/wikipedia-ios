@@ -63,10 +63,19 @@ maestro --device "$UDID" test .maestro/hybrid-search-onboarding.yaml
 expect_events onboarding \
   '"funnel_name":"hybrid_search_onboarding"' \
   '"element_id":"onboarding_query"' \
+  '"element_id":"learn_more"' \
   '"enrolled":"apps_hybridsearch"' \
   '"assigned":"lexicalsemantic"' \
   '"action":"show_hybrid_result"' \
   '"action":"search_impression"'
+# Android b7745030f3: the onboarding Learn More button must log learn_more,
+# never the old learn_button elementId.
+TKEV_LOG="$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)/tmp/tkev.log"
+if grep -qF '"element_id":"learn_button"' "$TKEV_LOG" 2>/dev/null; then
+  echo "FAIL [onboarding]: obsolete learn_button event was emitted." >&2
+  exit 1
+fi
+echo "OK [onboarding]: no obsolete learn_button event."
 
 maestro --device "$UDID" test .maestro/hybrid-search-results.yaml
 expect_events results \
