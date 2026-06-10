@@ -1,5 +1,5 @@
 appId: org.wikimedia.wikipedia
-name: Hybrid search enabled for French + French strings (6240fa0d02, 6d0b3e0c4e)
+name: Hybrid search enabled for French + French strings (6240fa0d02, 6d0b3e0c4e, e95b52efc6)
 tags:
   - mock
   - hybrid-search
@@ -41,17 +41,21 @@ tags:
 - assertVisible: "Disponible pour une durée limitée pendant cette phase de test."
 - assertVisible: "En savoir plus"
 - takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-onboarding
-# Sample queries (updated wording in 6d0b3e0c4e).
+# Sample queries: e95b52efc6 replaced the translated default queries with a
+# curated no-translate French set of 5 (keyed on the fr app language).
+# Pre-commit builds still show the old translated defaults ("Premiers Jeux
+# Olympiques", "ARN ou ADN", the pizza query, ...) and fail these assertions.
 - scrollUntilVisible:
-    element: "Pourquoi les gens mettent-ils de l'ananas sur leur pizza ?"
+    element: "Comment les langues disparaissent-elles ?"
 - assertVisible: "Besoin d'inspiration ?"
-- assertVisible: "Quand Pluton a-t-elle été retirée de la liste des planètes ?"
-- assertVisible: "Premiers Jeux Olympiques"
-- assertVisible: "ARN ou ADN"
+- assertVisible: "Pourquoi les étoiles semblent-elles scintiller la nuit ?"
+- assertVisible: "Origine des Jeux Olympiques"
+- assertVisible: "ADN ou ARN"
+- assertVisible: "Pourquoi rêvons-nous ?"
 - takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-onboarding-queries
 # Example query opts in and starts a hybrid search; the results header shows
 # the new attribution line.
-- tapOn: "Premiers Jeux Olympiques"
+- tapOn: "Origine des Jeux Olympiques"
 - extendedWaitUntil:
     visible: "Issu d’articles Wikipédia rédigés par des humains"
     timeout: 20000
