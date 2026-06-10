@@ -1,0 +1,54 @@
+appId: org.wikimedia.wikipedia
+name: Pronunciation audio request carries the app User-Agent (6c43d3fe3c)
+tags:
+  - mock
+  - pronunciation
+---
+# Mirrors Android pronunciation-user-agent.yaml (6c43d3fe3c): the native media
+# player's audio request must send the app User-Agent (WikipediaApp/...)
+# instead of the platform default (AppleCoreMedia/...).
+#
+# The iOS article stack cannot be fixture-served (article URLs must be
+# wikipedia.org hosts), so this flow opens the LIVE "Beer" article and taps its
+# real pronunciation control; the DEBUG -WMFAudioURLHostOverride seam redirects
+# only the resulting AVPlayer audio fetch to the fixture server on
+# localhost:8081, which logs the request's User-Agent for the runner to assert
+# (run-pronunciation.sh).
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      # 127.0.0.1 (not localhost): the media daemon's fetch must hit the
+      # IPv4-only fixture server.
+      "-WMFAudioURLHostOverride": "127.0.0.1:8081"
+      # PCS nowadays sends the pre-transcoded .mp3 pronunciation URL, which iOS
+      # routes to a web view; substitute the historical .ogg payload so the
+      # production Router audio gate -> AVPlayer pipeline is exercised.
+      "-WMFPronunciationAudioURLOverride": "https://upload.wikimedia.org/wikipedia/commons/c/c5/En-uk-Wikipedia.ogg"
+- tapOn: "Search"
+- tapOn: "Search Wikipedia"
+- inputText: "Wikipedia"
+- extendedWaitUntil:
+    visible: "Free online crowdsourced encyclopedia"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-pron-ua-search-results
+- tapOn: "Free online crowdsourced encyclopedia"
+# Live article load: wait for the lead section text.
+- extendedWaitUntil:
+    visible: ".*is a free online.*"
+    timeout: 30000
+- takeScreenshot: .maestro/screenshots/ios-pron-ua-article
+# The PCS title pronunciation speaker has no accessibility element; tap its
+# fixed position just right of the title (title bounds [16,336][141,369] on
+# the iPhone 16 Pro at default text size).
+- tapOn:
+    point: 158,352
+# AVPlayerViewController is presented; the (redirected) audio fetch happens now.
+- extendedWaitUntil:
+    visible: ".*0:0.*"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-pron-ua-player
