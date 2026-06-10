@@ -107,7 +107,7 @@ public final class WMFBasicService: WMFService {
         }
         
         let task = urlSession.wmfDataTask(with: urlRequest) { data, response, error in
-            
+
             if let error {
                 completion(nil, nil, error)
                 return
@@ -117,22 +117,23 @@ public final class WMFBasicService: WMFService {
                 completion(nil, nil, WMFServiceError.invalidHttpResponse(nil))
                 return
             }
-            
+
             guard httpResponse.isSuccessStatusCode else {
+                WMFDataEnvironment.current.httpErrorLoggingUtility?(urlRequest.url, urlRequest.httpMethod, httpResponse.statusCode)
                 completion(nil, nil, WMFServiceError.invalidHttpResponse(httpResponse.statusCode))
                 return
             }
-            
+
             guard let data = data else {
                 completion(nil, nil, WMFServiceError.missingData)
                 return
             }
-            
+
             completion(data, response, error)
         }
         task.resume()
     }
-    
+
     private func performGET<R: WMFServiceRequest>(request: R, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
          
         guard let basicRequest = request as? WMFBasicServiceRequest,
@@ -180,6 +181,7 @@ public final class WMFBasicService: WMFService {
             }
             
             guard httpResponse.isSuccessStatusCode else {
+                WMFDataEnvironment.current.httpErrorLoggingUtility?(urlRequest.url, urlRequest.httpMethod, httpResponse.statusCode)
                 completion(nil, nil, WMFServiceError.invalidHttpResponse(httpResponse.statusCode))
                 return
             }
@@ -218,6 +220,30 @@ public final class WMFBasicService: WMFService {
         }
     }
     
+    public func performDecodableGET<R: WMFServiceRequest, T: Decodable>(request: R, completion: @escaping (Result<(T, HTTPURLResponse?), Error>) -> Void) {
+
+        performGET(request: request) { data, response, error in
+
+            if let error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let data else {
+                completion(.failure(WMFServiceError.missingData))
+                return
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                let result: T = try decoder.decode(T.self, from: data)
+                completion(.success((result, response as? HTTPURLResponse)))
+            } catch let error {
+                completion(.failure(error))
+            }
+        }
+    }
+
     public func performDecodablePOST<R: WMFServiceRequest, T: Decodable>(request: R, completion: @escaping (Result<T, Error>) -> Void) {
         
         performPOST(request: request) { data, response, error in

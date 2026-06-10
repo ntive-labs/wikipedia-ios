@@ -1,0 +1,47 @@
+appId: org.wikimedia.wikipedia
+name: HTTP failure submits a mediawiki.client.error event (2d908c3384)
+tags:
+  - mock
+  - client-error
+---
+# Mirrors Android client-error-logging.yaml (2d908c3384): an HTTP failure (404)
+# from an API request must be submitted to the Event Platform as a
+# /mediawiki/client/error/2.0.0 event on the mediawiki.client.error stream.
+#
+# Prerequisites (handled by run-client-error.sh):
+#   - fixture server on localhost:8081 (404s any request mentioning "errortrigger")
+# The failing request is the hybrid-search semantic fetch (WMFData stack; since
+# 6240fa0d02 it is the MediaWiki full-text request, redirected to the fixture via
+# -WMFMediaWikiAPIBaseURLOverride); the query term is gibberish so the live
+# lexical search also returns nothing, leaving the deterministic "No results"
+# hybrid state on screen.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "semanticLexical"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+      "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+      "-WMFMediaWikiAPIBaseURLOverride": "http://localhost:8081/"
+- takeScreenshot: .maestro/screenshots/ios-client-error-feed
+- tapOn: "Search"
+- assertVisible: "A new way to search"
+- tapOn: "Get started"
+- assertVisible: "Search or ask anything"
+- takeScreenshot: .maestro/screenshots/ios-client-error-search-open
+- inputText: "zzyzxerrortriggerxyz"
+# Run the search: the semantic request 404s -> WMFBasicService reports it to
+# the client-error funnel; with zero lexical results the hybrid screen lands
+# on its "No results" state.
+- extendedWaitUntil:
+    visible: "Search for:.*"
+    timeout: 15000
+- tapOn: "Search for:.*"
+- extendedWaitUntil:
+    visible: "No results"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-client-error-search-error

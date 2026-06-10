@@ -1,0 +1,64 @@
+{
+  "events": [
+    {
+      "text": "A grand exposition of mechanical inventions opens in a European capital.",
+      "year": 1859,
+      "pages": [
+        {
+          "title": "Exhibition",
+          "description": "Organized presentation of items",
+          "extract": "An exhibition is an organized presentation and display of a selection of items.",
+          "thumbnail": null,
+          "content_urls": {
+            "desktop": {
+              "page": "https://en.wikipedia.org/wiki/Exhibition"
+            },
+            "mobile": {
+              "page": "https://en.m.wikipedia.org/wiki/Exhibition"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "A celebrated aviator completes the first nonstop crossing of a vast desert.",
+      "year": 1923,
+      "pages": [
+        {
+          "title": "Aviator",
+          "description": "Person who flies aircraft",
+          "extract": "An aviator is a person who flies an aircraft.",
+          "thumbnail": null,
+          "content_urls": {
+            "desktop": {
+              "page": "https://en.wikipedia.org/wiki/Aviator"
+            },
+            "mobile": {
+              "page": "https://en.m.wikipedia.org/wiki/Aviator"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "A moonlit comet is photographed in remarkable detail by an observatory.",
+      "year": 1969,
+      "pages": [
+        {
+          "title": "Comet",
+          "description": "Icy small Solar System body",
+          "extract": "A comet is an icy, small Solar System body that warms and begins to release gases when passing close to the Sun.",
+          "thumbnail": null,
+          "content_urls": {
+            "desktop": {
+              "page": "https://en.wikipedia.org/wiki/Comet"
+            },
+            "mobile": {
+              "page": "https://en.m.wikipedia.org/wiki/Comet"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

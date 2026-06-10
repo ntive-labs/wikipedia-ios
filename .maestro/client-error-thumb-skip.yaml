@@ -1,0 +1,125 @@
+appId: org.wikimedia.wikipedia
+name: 320px thumbnail HTTP failures are NOT reported to mediawiki.client.error (763158c976)
+tags:
+  - mock
+  - client-error
+---
+# Mirrors Android client-error-thumb-skip.yaml (763158c976). The fixture server
+# (run-client-error-thumb-skip.sh) serves onthisday_events_thumb404.json: every
+# On This Day event page carries a thumbnail URL that 404s (fixture
+# "errortrigger" rule) — 5 URLs contain /320px- (the Commons rate-limit noise
+# this commit stops reporting) and 4 control URLs contain /330px- (which must
+# still be reported). Playing the full Which Came First game displays every
+# event card; each card image is fetched via WMFImageDataController ->
+# WMFBasicService, whose HTTP failures are reported through
+# WMFDataEnvironment.httpErrorLoggingUtility -> ClientErrorFunnel.logHttpResponse.
+# The runner then asserts via the tmp/epev.log seam that client-error events
+# exist for the /330px- control URLs and none exist for the /320px- URLs.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFWikimediaRestAPIBaseURLOverride": "http://localhost:8081/"
+# A fresh feed fetch can be slow; nudge it with a pull-to-refresh if needed.
+- extendedWaitUntil:
+    visible: "Featured article"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible: "Featured article"
+    commands:
+      - swipe:
+          start: 50%, 30%
+          end: 50%, 70%
+      - extendedWaitUntil:
+          visible: "Featured article"
+          timeout: 45000
+# The daily-game availability check fails while the WMFData store is still
+# initializing on a cold start, which removes the games group. Keep doing
+# pull-to-refreshes at the feed top until the warm content-source pass
+# re-creates it.
+- repeat:
+    times: 8
+    while:
+      notVisible: "Games"
+    commands:
+      - swipe:
+          start: 50%, 25%
+          end: 50%, 75%
+      - extendedWaitUntil:
+          visible: "Games"
+          timeout: 20000
+          optional: true
+- scrollUntilVisible:
+    element:
+      text: "Which came first?"
+    timeout: 15000
+    centerElement: true
+- takeScreenshot: .maestro/screenshots/ios-client-error-thumb-card
+# Card -> splash screen.
+- tapOn: "Play today's game"
+- extendedWaitUntil:
+    visible: "About this game"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-client-error-thumb-menu
+# Splash -> game.
+- tapOn: "Play today's game"
+- extendedWaitUntil:
+    visible: "Question 1 of 5"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-client-error-thumb-q1
+- tapOn:
+    point: 50%, 43%
+- extendedWaitUntil:
+    visible: "Submit"
+    timeout: 5000
+- tapOn: "Submit"
+- extendedWaitUntil:
+    visible: "Next"
+    timeout: 8000
+- takeScreenshot: .maestro/screenshots/ios-client-error-thumb-q1-revealed
+- tapOn: "Next"
+
+# ---- Questions 2-4 ----
+- repeat:
+    times: 3
+    commands:
+      - extendedWaitUntil:
+          notVisible: "Next"
+          timeout: 8000
+      - tapOn:
+          point: 50%, 43%
+      - extendedWaitUntil:
+          visible: "Submit"
+          timeout: 5000
+      - tapOn: "Submit"
+      - extendedWaitUntil:
+          visible: "Next"
+          timeout: 8000
+      - tapOn: "Next"
+
+# ---- Question 5 ----
+- extendedWaitUntil:
+    visible: "Question 5 of 5"
+    timeout: 8000
+- tapOn:
+    point: 50%, 43%
+- extendedWaitUntil:
+    visible: "Submit"
+    timeout: 5000
+- tapOn: "Submit"
+- extendedWaitUntil:
+    visible: "See Results"
+    timeout: 8000
+- tapOn: "See Results"
+
+# ---- Results: every event has now been displayed (all 9 thumbnails requested) ----
+- extendedWaitUntil:
+    visible: "You scored.*"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-client-error-thumb-results
