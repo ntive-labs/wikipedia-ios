@@ -82,6 +82,12 @@ expect_events close-button \
   '"element_id":"search_close"' \
   '"element_id":"search_back"'
 
+maestro --device "$UDID" test .maestro/hybrid-search-empty-title-only.yaml
+expect_events empty-title-only \
+  '"action":"search_init"' \
+  '"action":"show_hybrid_result"' \
+  '"assigned":"semanticlexical"'
+
 maestro --device "$UDID" test .maestro/hybrid-search-control.yaml
 expect_events control \
   '"action":"search_impression"' \
