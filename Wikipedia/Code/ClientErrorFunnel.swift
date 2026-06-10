@@ -66,6 +66,13 @@ import WMFData
     /// protocol or the raw reason phrase at this layer, so `http.protocol` is
     /// omitted and `message` uses the localized status-code description.
     public func logHttpResponse(url: URL?, method: String?, statusCode: Int) {
+        // Log this error, but only if it's not a request for a 320px thumbnail, which is a known
+        // rate-limiting issue in old saved articles that were saved prior to Commons switching to
+        // 330px thumbnails.
+        if url?.absoluteString.contains("/320px-") == true {
+            return
+        }
+
         let message = HTTPURLResponse.localizedString(forStatusCode: statusCode)
         let event = Event(
             message: message.isEmpty ? String(describing: Self.self) : message,
