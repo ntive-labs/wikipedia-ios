@@ -172,10 +172,21 @@ import CocoaLumberjackSwift
                 print("\(printablePayload)")
             }
 
-            // Single-line event log in the unified log, for test assertions.
+            // Single-line event log, for test assertions. Appended to a file in
+            // the app container (the unified log truncates long messages).
             if let lineData = try? JSONEncoder().encode(event),
                let line = String(data: lineData, encoding: .utf8) {
                 NSLog("TKEV %@", line)
+                let logURL = FileManager.default.temporaryDirectory.appendingPathComponent("tkev.log")
+                if let lineData = (line + "\n").data(using: .utf8) {
+                    if let handle = try? FileHandle(forWritingTo: logURL) {
+                        defer { try? handle.close() }
+                        _ = try? handle.seekToEnd()
+                        try? handle.write(contentsOf: lineData)
+                    } else {
+                        try? lineData.write(to: logURL)
+                    }
+                }
             }
 #endif
             

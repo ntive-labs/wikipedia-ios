@@ -905,6 +905,21 @@ extension SearchResultsViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let text = searchController.searchBar.text ?? ""
         needsAnimateLanguageBarMovement = false
+        // UISearchBar's clear (✕) button has no dedicated callback (and the bar delegate's
+        // textDidChange is not invoked for it here), so treat a multi-character string
+        // emptying in a single update of the active search controller as the clear button.
+        // This misses clearing a single-character query and can also match a
+        // cut/select-all delete; the isActive check excludes the dismissal path, which
+        // empties the bar programmatically.
+        if text.isEmpty, lastSearchBarText.count > 1, searchController.isActive {
+            searchInstrument?.submitInteraction(action: "click", actionSource: "search", elementId: "search_close")
+            // Clearing an in-progress query records it as a recent search (Android parity).
+            if let url = siteURL, let entry = MWKRecentSearchEntry(url: url, searchTerm: lastSearchBarText) {
+                dataStore.recentSearchList.addEntry(entry)
+                dataStore.recentSearchList.save()
+                reloadRecentSearches()
+            }
+        }
         lastSearchBarText = text
 
         if text.wmf_hasNonWhitespaceText {
@@ -1019,13 +1034,4 @@ extension SearchResultsViewController: UISearchBarDelegate {
         enterHybridResultsMode(searchTerm: text)
     }
 
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        // UISearchBar offers no dedicated clear (✕) button callback, so treat a multi-character
-        // string emptying in a single change as the clear button. This misses clearing a
-        // single-character query and can also match a cut/select-all delete.
-        if searchText.isEmpty, lastSearchBarText.count > 1 {
-            searchInstrument?.submitInteraction(action: "click", actionSource: "search", elementId: "search_close")
-        }
-        lastSearchBarText = searchText
-    }
 }
