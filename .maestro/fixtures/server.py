@@ -17,6 +17,7 @@ FIXTURE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # (url substring, fixture file) — first match wins.
 ROUTES = [
+    ("onthisday", "onthisday_events.json"),
     ("include_text=", "semantic_search_results.json"),
     ("feed/configuration", "remote_config.json"),
     ("generator=prefixsearch", "search_results.json"),
@@ -31,9 +32,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
         matched = "(default empty)"
         for fragment, fixture in ROUTES:
             if fragment in self.path:
-                with open(os.path.join(FIXTURE_DIR, fixture), "rb") as f:
-                    body = f.read()
-                matched = fixture
+                fixture_path = os.path.join(FIXTURE_DIR, fixture)
+                if os.path.exists(fixture_path):
+                    with open(fixture_path, "rb") as f:
+                        body = f.read()
+                    matched = fixture
+                else:
+                    matched = "(missing %s -> default empty)" % fixture
                 break
         sys.stderr.write("[fixture] %s %s -> %s\n" % (self.command, self.path[:120], matched))
         self.send_response(200)

@@ -1,0 +1,94 @@
+appId: org.wikimedia.wikipedia
+name: Games card hide disables the games feed setting; undo restores it
+tags:
+  - wikigames
+---
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFWikimediaRestAPIBaseURLOverride": "http://localhost:8081/"
+# A fresh feed fetch can be slow; nudge it with a pull-to-refresh if needed.
+- extendedWaitUntil:
+    visible: "Featured article"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible: "Featured article"
+    commands:
+      - swipe:
+          start: 50%, 30%
+          end: 50%, 70%
+      - extendedWaitUntil:
+          visible: "Featured article"
+          timeout: 45000
+# The daily-game availability check fails while the WMFData store is still
+# initializing on a cold start, which removes the games group. Keep doing
+# pull-to-refreshes at the feed top until the warm content-source pass
+# re-creates it ("Games" is the card's feed header).
+- repeat:
+    times: 8
+    while:
+      notVisible: "Games"
+    commands:
+      - swipe:
+          start: 50%, 25%
+          end: 50%, 75%
+      - extendedWaitUntil:
+          visible: "Games"
+          timeout: 20000
+          optional: true
+- scrollUntilVisible:
+    element:
+      text: "Which came first?"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-card
+- tapOn:
+    text: "overflow"
+    below: "Save for later"
+- assertVisible: "Hide this card"
+# With the port, hiding the games card IS the kind-level hide, so no separate
+# "Hide all" item appears (same as Suggested Edits). This also proves we opened
+# the games card's menu and not another card's.
+- assertNotVisible: "Hide all.*"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-card-menu
+- tapOn: "Hide this card"
+- extendedWaitUntil:
+    visible: "All Games cards hidden"
+    timeout: 5000
+- assertVisible: "Undo"
+- assertNotVisible: "Which came first?"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-hidden-undo
+- tapOn: "Undo"
+- extendedWaitUntil:
+    visible: "Which came first?"
+    timeout: 10000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-restored
+# Hide again and relaunch: the games feed setting is persisted off, so the
+# card must stay gone.
+- tapOn:
+    text: "overflow"
+    below: "Save for later"
+- tapOn: "Hide this card"
+- extendedWaitUntil:
+    visible: "All Games cards hidden"
+    timeout: 5000
+- launchApp:
+    stopApp: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFWikimediaRestAPIBaseURLOverride": "http://localhost:8081/"
+- extendedWaitUntil:
+    visible: "Featured article"
+    timeout: 45000
+- assertNotVisible: "Which came first?"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-stays-hidden
