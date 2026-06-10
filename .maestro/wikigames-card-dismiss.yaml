@@ -47,6 +47,7 @@ tags:
     element:
       text: "Which came first?"
     timeout: 15000
+    centerElement: true
 - takeScreenshot: .maestro/screenshots/ios-wikigames-card
 - tapOn:
     text: "overflow"
