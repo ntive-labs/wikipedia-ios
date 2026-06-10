@@ -10,9 +10,11 @@ tags:
 #
 # Prerequisites (handled by run-client-error.sh):
 #   - fixture server on localhost:8081 (404s any request mentioning "errortrigger")
-# The failing request is the hybrid-search semantic fetch (WMFData stack);
-# the query term is gibberish so the live lexical search also returns nothing,
-# leaving the deterministic "No results" hybrid state on screen.
+# The failing request is the hybrid-search semantic fetch (WMFData stack; since
+# 6240fa0d02 it is the MediaWiki full-text request, redirected to the fixture via
+# -WMFMediaWikiAPIBaseURLOverride); the query term is gibberish so the live
+# lexical search also returns nothing, leaving the deterministic "No results"
+# hybrid state on screen.
 - launchApp:
     clearState: true
     arguments:
@@ -24,6 +26,7 @@ tags:
       "-WMFHybridSearchBucketOverride": "semanticLexical"
       "-WMFHybridSearchSupportedLanguagesOverride": "en"
       "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+      "-WMFMediaWikiAPIBaseURLOverride": "http://localhost:8081/"
 - takeScreenshot: .maestro/screenshots/ios-client-error-feed
 - tapOn: "Search"
 - assertVisible: "A new way to search"

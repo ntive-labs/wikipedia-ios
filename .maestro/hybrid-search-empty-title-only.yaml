@@ -24,6 +24,7 @@ tags:
       "-WMFHybridSearchBucketOverride": "semanticLexical"
       "-WMFHybridSearchSupportedLanguagesOverride": "en"
       "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+      "-WMFMediaWikiAPIBaseURLOverride": "http://localhost:8081/"
 - tapOn: "Search"
 - assertVisible: "A new way to search"
 - tapOn: "Get started"

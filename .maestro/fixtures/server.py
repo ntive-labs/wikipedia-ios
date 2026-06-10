@@ -15,12 +15,17 @@ import sys
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8081
 FIXTURE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# (url substring, fixture file) — first match wins.
+# (url substring, fixture file[, extra response headers]) — first match wins.
 # ONTHISDAY_FIXTURE selects the On This Day events fixture (e.g. the
 # insufficient-events scenario for the WikiGames pairing-fallback flow).
 ROUTES = [
     ("onthisday", os.environ.get("ONTHISDAY_FIXTURE", "onthisday_events.json")),
     ("include_text=", "semantic_search_results.json"),
+    # Semantic search via MediaWiki full-text search (6240fa0d02, non-el languages):
+    # MwQueryResponse with snippet/sectiontitle, plus the x-search-id header the app
+    # must thread into its hybrid analytics events.
+    ("cirrusSemanticSearch", "semantic_search_results_fulltext.json",
+     {"x-search-id": "maestro-search-id-123"}),
     ("feed/configuration", "remote_config.json"),
     ("generator=prefixsearch", "search_results.json"),
     ("list=search", "search_results.json"),
@@ -44,13 +49,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         body = b"{}"
         matched = "(default empty)"
-        for fragment, fixture in ROUTES:
+        extra_headers = {}
+        for route in ROUTES:
+            fragment, fixture = route[0], route[1]
             if fragment in self.path:
                 fixture_path = os.path.join(FIXTURE_DIR, fixture)
                 if os.path.exists(fixture_path):
                     with open(fixture_path, "rb") as f:
                         body = f.read()
                     matched = fixture
+                    if len(route) > 2:
+                        extra_headers = route[2]
                 else:
                     matched = "(missing %s -> default empty)" % fixture
                 break
@@ -58,6 +67,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        for name, value in extra_headers.items():
+            self.send_header(name, value)
         self.end_headers()
         self.wfile.write(body)
 

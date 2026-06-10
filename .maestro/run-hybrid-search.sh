@@ -84,7 +84,8 @@ expect_events results \
   '"action":"show_hybrid_result"' \
   '"element_id":"semantic_search_card"' \
   '"element_id":"thumb_up"' \
-  '"assigned":"semanticlexical"'
+  '"assigned":"semanticlexical"' \
+  'maestro-search-id-123'
 
 maestro --device "$UDID" test .maestro/hybrid-search-close-button.yaml
 expect_events close-button \
@@ -108,6 +109,15 @@ expect_events no-results-keyboard \
   '"action":"search_init"' \
   '"element_id":"semantic_search_explicit"' \
   '"assigned":"semanticlexical"'
+
+# French app language, NO supported-languages override: onboarding must appear
+# because "fr" is now in the compiled-in supported list (6240fa0d02). French UI
+# chrome (-AppleLanguages) + English-fallback hybrid onboarding copy (the FR
+# hybrid strings arrive in a later sync commit).
+maestro --device "$UDID" test .maestro/hybrid-search-fr-enabled.yaml
+expect_events fr-enabled \
+  '"funnel_name":"hybrid_search_onboarding"' \
+  '"assigned":"lexicalsemantic"'
 
 maestro --device "$UDID" test .maestro/hybrid-search-control.yaml
 expect_events control \
