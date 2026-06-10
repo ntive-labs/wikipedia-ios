@@ -368,11 +368,17 @@ public class Session: NSObject {
     
     /**
      Shared response handling for common status codes. Currently logs the user out and removes local credentials if a 401 is received
-     and an attempt to re-login with stored credentials fails.
+     and an attempt to re-login with stored credentials fails. Also reports unsuccessful (>= 400) responses to the
+     mediawiki.client.error logging-intake stream (parity with Android's UnsuccessfulResponseInterceptor).
     */
-    private func handleResponse(_ response: URLResponse?, reattemptLoginOn401Response: Bool = true) {
+    private func handleResponse(_ response: URLResponse?, requestMethod: String? = nil, reattemptLoginOn401Response: Bool = true) {
         guard let response = response, let httpResponse = response as? HTTPURLResponse else {
             return
+        }
+        if httpResponse.statusCode >= 400 {
+            // Note: the Event Platform's own intake POSTs use the plain dataTask path,
+            // which does not pass through here, so client errors cannot self-report.
+            ClientErrorFunnel.shared.logHttpResponse(url: httpResponse.url, method: requestMethod, statusCode: httpResponse.statusCode)
         }
         switch httpResponse.statusCode {
         case 401:
@@ -401,7 +407,7 @@ public class Session: NSObject {
      */
     @discardableResult public func jsonDecodableTaskWithDecodableError<T: Decodable, E: Decodable>(with url: URL?, method: Session.Request.Method = .get, bodyParameters: Any? = nil, bodyEncoding: Session.Request.Encoding = .json, cachePolicy: URLRequest.CachePolicy? = nil, completionHandler: @escaping (_ result: T?, _ errorResult: E?, _ response: URLResponse?, _ error: Error?) -> Swift.Void) -> URLSessionDataTask? {
         guard let task = dataTask(with: url, method: method, bodyParameters: bodyParameters, bodyEncoding: bodyEncoding, cachePolicy: cachePolicy, completionHandler: { (data, response, error) in
-            self.handleResponse(response)
+            self.handleResponse(response, requestMethod: method.stringValue)
             guard let data = data else {
                 completionHandler(nil, nil, response, error)
                 return
@@ -450,7 +456,7 @@ public class Session: NSObject {
      */
     @discardableResult public func jsonDecodableTask<T: Decodable>(with url: URL?, method: Session.Request.Method = .get, bodyParameters: Any? = nil, bodyEncoding: Session.Request.Encoding = .json, headers: [String: String] = [:], cachePolicy: URLRequest.CachePolicy? = nil, priority: Float = URLSessionTask.defaultPriority, completionHandler: @escaping (_ result: T?, _ response: URLResponse?,  _ error: Error?) -> Swift.Void) -> URLSessionDataTask? {
         guard let task = dataTask(with: url, method: method, bodyParameters: bodyParameters, bodyEncoding: bodyEncoding, headers: headers, cachePolicy: cachePolicy, priority: priority, completionHandler: { (data, response, error) in
-            self.handleResponse(response)
+            self.handleResponse(response, requestMethod: method.stringValue)
             guard let data = data else {
                 completionHandler(nil, response, error)
                 return
@@ -477,7 +483,7 @@ public class Session: NSObject {
     @discardableResult public func jsonDecodableTask<T: Decodable>(with urlRequest: URLRequest, completionHandler: @escaping (_ result: T?, _ response: URLResponse?,  _ error: Error?) -> Swift.Void) -> URLSessionDataTask? {
         
         guard let task = dataTask(with: urlRequest, completionHandler: { (data, response, error) in
-            self.handleResponse(response)
+            self.handleResponse(response, requestMethod: urlRequest.httpMethod)
             guard let data = data else {
                 completionHandler(nil, response, error)
                 return
@@ -541,7 +547,7 @@ public class Session: NSObject {
         }
         
         return httpClient.dataTask(with: request, completionHandler: { (data, response, error) in
-            self.handleResponse(response, reattemptLoginOn401Response: reattemptLoginOn401Response)
+            self.handleResponse(response, requestMethod: request.httpMethod, reattemptLoginOn401Response: reattemptLoginOn401Response)
             cachedCompletion(data, response, error)
         })
     }

@@ -1,0 +1,77 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search re-shows the keyboard when the title-only screen has no results
+tags:
+  - mock
+  - hybrid-search
+---
+# Mirrors Android 4778ade23b: when the experiment's title-only (typing) screen
+# renders its zero-results state ("Search for:" bar) and the keyboard is down,
+# the keyboard must come back up so the user can refine the query — but only
+# when the target language has the experiment on ("toolbar is up").
+#
+# Scenario (round trip through a non-experiment language, keyboard hidden by
+# entering hybrid results — the realistic way the keyboard goes down in search):
+#   1. en (experiment on): no-results query -> "Search for:" bar, keyboard up.
+#   2. Tap the bar -> hybrid results; entering them resigns the keyboard.
+#   3. Tap Français (NOT in the supported-languages override) -> standard
+#      "No results found" state; keyboard must stay hidden.
+#   4. Tap English -> empty title-only state re-renders with the
+#      "Search for:" bar and the keyboard comes back up (the fix).
+#
+# Prerequisites (handled by run-hybrid-search.sh):
+#   - fixture server on localhost:8081 (semantic API route)
+# Lexical search runs live; the no-results query is a gibberish token that
+# returns nothing from prefix or full-text search in any language. Two app
+# languages (en, fr) come from -AppleLanguages (fresh installs fall back to the
+# OS language list for the app's preferred languages).
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "semanticLexical"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+      "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+      "-AppleLanguages": "(en, fr)"
+- tapOn: "Search"
+- assertVisible: "A new way to search"
+- tapOn: "Get started"
+- assertVisible: "Search or ask anything"
+- inputText: "zzyzxnoresultsabcxyz"
+# Zero title results: the pinned "Search for:" bar appears (keyboard up from typing).
+- extendedWaitUntil:
+    visible: "Search for:.*"
+    timeout: 15000
+- assertNotVisible: "No results found"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-no-results-keyboard-bar
+# Run the semantic search: entering hybrid results resigns the keyboard.
+- tapOn: "Search for:.*"
+- extendedWaitUntil:
+    visible: "Sourced from human generated Wikipedia articles"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-no-results-keyboard-results
+# Switch to French (not an experiment language): standard empty state, and the
+# keyboard must NOT come back (no experiment toolbar in the target language).
+- tapOn: "Français"
+- extendedWaitUntil:
+    visible: "No results found"
+    timeout: 15000
+- assertNotVisible: "Search for:.*"
+- assertNotVisible: "q"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-no-results-keyboard-fr-standard
+# Switch back to English: the empty title-only state re-renders with the
+# "Search for:" bar and must bring the keyboard back up (the fix). Unlike
+# Android, the iOS software keyboard is part of the accessibility hierarchy,
+# so the flow can assert a key directly.
+- tapOn: "English"
+- extendedWaitUntil:
+    visible: "Search for:.*"
+    timeout: 15000
+- assertNotVisible: "No results found"
+- extendedWaitUntil:
+    visible: "q"
+    timeout: 5000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-no-results-keyboard-reshown

@@ -28,6 +28,11 @@ public final class WMFDataEnvironment: ObservableObject {
     public var userAgentUtility: (() -> String)?
     public var appInstallIDUtility: (() -> String?)?
     public var acceptLanguageUtility: (() -> String)?
+
+    /// Called with (url, httpMethod, statusCode) whenever a WMFData service request
+    /// completes with an unsuccessful (>= 400) HTTP status. Assigned app-side to report
+    /// the failure to the mediawiki.client.error logging-intake stream.
+    public var httpErrorLoggingUtility: (@Sendable (URL?, String?, Int) -> Void)?
     
     public internal(set) var userDefaultsStore: WMFKeyValueStore? = WMFUserDefaultsStore()
     

@@ -711,6 +711,29 @@ import WMFTestKitchen
             
             let data = try encoder.encode(eventPayload)
 
+            #if DEBUG
+            // Single-line event log, for test assertions (mirrors the TKEV seam in
+            // TestKitchenAdapter). Logged at submit time, before the stream-config and
+            // sampling checks, so tests can observe every submitted event. Appended to
+            // a file in the app container (the unified log truncates long messages).
+            let lineEncoder = JSONEncoder()
+            lineEncoder.dateEncodingStrategy = .iso8601
+            if let lineData = try? lineEncoder.encode(eventPayload),
+               let line = String(data: lineData, encoding: .utf8) {
+                NSLog("EPEV %@", line)
+                let logURL = FileManager.default.temporaryDirectory.appendingPathComponent("epev.log")
+                if let appendData = (line + "\n").data(using: .utf8) {
+                    if let handle = try? FileHandle(forWritingTo: logURL) {
+                        defer { try? handle.close() }
+                        _ = try? handle.seekToEnd()
+                        try? handle.write(contentsOf: appendData)
+                    } else {
+                        try? appendData.write(to: logURL)
+                    }
+                }
+            }
+            #endif
+
             guard let streamConfigs = streamConfigurations else {
                 appendEventToInputBuffer(data: data, stream: stream)
                 return

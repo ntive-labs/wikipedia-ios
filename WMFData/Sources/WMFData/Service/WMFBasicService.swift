@@ -107,7 +107,7 @@ public final class WMFBasicService: WMFService {
         }
         
         let task = urlSession.wmfDataTask(with: urlRequest) { data, response, error in
-            
+
             if let error {
                 completion(nil, nil, error)
                 return
@@ -117,22 +117,23 @@ public final class WMFBasicService: WMFService {
                 completion(nil, nil, WMFServiceError.invalidHttpResponse(nil))
                 return
             }
-            
+
             guard httpResponse.isSuccessStatusCode else {
+                WMFDataEnvironment.current.httpErrorLoggingUtility?(urlRequest.url, urlRequest.httpMethod, httpResponse.statusCode)
                 completion(nil, nil, WMFServiceError.invalidHttpResponse(httpResponse.statusCode))
                 return
             }
-            
+
             guard let data = data else {
                 completion(nil, nil, WMFServiceError.missingData)
                 return
             }
-            
+
             completion(data, response, error)
         }
         task.resume()
     }
-    
+
     private func performGET<R: WMFServiceRequest>(request: R, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
          
         guard let basicRequest = request as? WMFBasicServiceRequest,
@@ -180,6 +181,7 @@ public final class WMFBasicService: WMFService {
             }
             
             guard httpResponse.isSuccessStatusCode else {
+                WMFDataEnvironment.current.httpErrorLoggingUtility?(urlRequest.url, urlRequest.httpMethod, httpResponse.statusCode)
                 completion(nil, nil, WMFServiceError.invalidHttpResponse(httpResponse.statusCode))
                 return
             }
