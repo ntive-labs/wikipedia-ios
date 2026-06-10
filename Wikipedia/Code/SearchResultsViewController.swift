@@ -64,6 +64,12 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
     /// Called when hybrid search needs to set the search bar text without focusing the keyboard.
     var setSearchBarTextAction: ((String) -> Void)?
 
+    /// Called when a search completes with zero results while the hybrid title-only (typing) screen
+    /// is showing, so the host can bring the keyboard back up for query refinement — e.g. after
+    /// switching to a language tab where the query has no results. Android parity: `onNoResults` →
+    /// `DeviceUtil.showSoftKeyboard` (commit 4778ade23b).
+    var noResultsAction: (() -> Void)?
+
     /// Called when the user turns off the hybrid search experiment, so the host can refresh its search bar placeholder.
     var hybridSearchExperimentTurnedOffAction: (() -> Void)?
 
@@ -356,6 +362,11 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
                 self.resultsViewController.results = resultsArray
                 if self.isHybridSearchActive && !self.isShowingHybridResults && searchTerm == self.searchTerm {
                     self.hybridSuggestionsViewModel.titles = resultsArray.compactMap { $0.displayTitle }
+                    if resultsArray.isEmpty {
+                        // The title-only screen is rendering its zero-results state ("Search for:" bar
+                        // only); re-show the keyboard so the user can refine the query (Android 4778ade23b).
+                        self.noResultsAction?()
+                    }
                 }
                 self.searchInstrument?.submitInteraction(action: "show_search_result", actionSource: "search", actionContext: ["query": searchTerm])
                 guard !suggested else { return }
@@ -1015,6 +1026,12 @@ extension SearchResultsViewController: SearchLanguagesBarViewControllerDelegate 
             }
             // Mirrors Android: switching to an unsupported language resets to the standard experience.
             exitHybridResultsMode()
+        }
+
+        if searchTerm?.wmf_hasNonWhitespaceText ?? false {
+            // Re-embed for the new language: the hybrid title-only screen when the target language is
+            // in the experiment, the standard results list otherwise. Android recomposes this
+            // automatically on language change (`isHybridSearchExperimentOn` is per selected language).
             showSearchResults(animated: false)
         }
 

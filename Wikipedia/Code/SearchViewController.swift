@@ -133,6 +133,12 @@ class SearchViewController: ThemeableViewController, WMFNavigationBarConfiguring
             self?.navigationItem.searchController?.searchBar.text = searchTerm
             self?.navigationItem.searchController?.searchBar.resignFirstResponder()
         }
+        vc.noResultsAction = { [weak self] in
+            // Hybrid title-only screen has zero results: bring the keyboard back so the user can
+            // refine the query (Android parity: DeviceUtil.showSoftKeyboard, commit 4778ade23b).
+            // becomeFirstResponder is a no-op when the search bar is already focused.
+            self?.navigationItem.searchController?.searchBar.becomeFirstResponder()
+        }
         vc.hybridSearchExperimentTurnedOffAction = { [weak self] in
             self?.refreshSearchBarPlaceholder()
         }
