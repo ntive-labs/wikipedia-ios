@@ -1,0 +1,61 @@
+{
+  "events": [
+    {
+      "text": "A coastal lighthouse is automated after decades of manned operation.",
+      "year": 1950,
+      "pages": [
+        {
+          "title": "Lighthouse",
+          "description": "Structure designed to emit light to aid navigation",
+          "extract": "A lighthouse is a tower, building, or other type of physical structure designed to emit light to serve as a beacon for navigational aid.",
+          "content_urls": {
+            "desktop": {
+              "page": "https://en.wikipedia.org/wiki/Lighthouse"
+            },
+            "mobile": {
+              "page": "https://en.m.wikipedia.org/wiki/Lighthouse"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "A mountain railway reopens after a long winter closure.",
+      "year": 1950,
+      "pages": [
+        {
+          "title": "Mountain railway",
+          "description": "Railway that operates in mountainous terrain",
+          "extract": "A mountain railway is a railway that operates in a mountainous region.",
+          "content_urls": {
+            "desktop": {
+              "page": "https://en.wikipedia.org/wiki/Mountain_railway"
+            },
+            "mobile": {
+              "page": "https://en.m.wikipedia.org/wiki/Mountain_railway"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "A famous orchestra performs an open-air concert beside a river.",
+      "year": 1950,
+      "pages": [
+        {
+          "title": "Orchestra",
+          "description": "Large instrumental ensemble",
+          "extract": "An orchestra is a large instrumental ensemble typical of classical music.",
+          "content_urls": {
+            "desktop": {
+              "page": "https://en.wikipedia.org/wiki/Orchestra"
+            },
+            "mobile": {
+              "page": "https://en.m.wikipedia.org/wiki/Orchestra"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

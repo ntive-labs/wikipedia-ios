@@ -24,14 +24,26 @@ extension URL {
         return components.url
     }
     
+    /// Dev/test seam: when set (e.g. via the -WMFWikimediaRestAPIBaseURLOverride launch
+    /// argument), Wikimedia REST API requests are redirected to the given base URL so
+    /// UI-test flows can serve canned responses locally. See .maestro/MOCKING.md.
+    private static let wikimediaRestAPIBaseURLOverrideKey = "WMFWikimediaRestAPIBaseURLOverride"
+
     static func wikimediaRestAPIURL(project: WMFProject, additionalPathComponents: [String]) -> URL? {
         guard let siteURL = project.siteURL,
         var components = URLComponents(url: siteURL, resolvingAgainstBaseURL: false) else {
             return nil
         }
-        
+
         components.path = baseWikimediaRestAPIPathComponents + additionalPathComponents.joined(separator: "/")
-        
+
+        if let override = UserDefaults.standard.string(forKey: wikimediaRestAPIBaseURLOverrideKey),
+           let overrideComponents = URLComponents(string: override) {
+            components.scheme = overrideComponents.scheme
+            components.host = overrideComponents.host
+            components.port = overrideComponents.port
+        }
+
         return components.url
     }
     
