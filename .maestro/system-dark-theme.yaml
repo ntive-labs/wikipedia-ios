@@ -1,0 +1,67 @@
+appId: org.wikimedia.wikipedia
+name: System dark theme defaults to Dark, not Black (Android 8b7b08008f parity)
+tags:
+  - theme
+---
+# Mirrors apps-android-wikipedia/.maestro/system-dark-theme.yaml: with the
+# theme preference at its default ("Match system theme", themeName=standard),
+# the app must resolve a dark system appearance to the DARK theme (paper
+# #27292D), not BLACK (#000000). The simulator appearance is set by
+# run-system-dark-theme.sh between invocations (STATE env: light | dark).
+#
+# clearState only on the light pass: the dark pass re-launches the same
+# install so the stored theme stays at its default.
+- runFlow:
+    when:
+      true: ${STATE == 'light'}
+    commands:
+      - launchApp:
+          clearState: true
+          arguments:
+            "-DidShowOnboarding5.3": "YES"
+            "-WMFHideTipsForTesting": "YES"
+            "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+            "-WMFSuppressGamesAnnouncementForTesting": "YES"
+            "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+            "-WMFHybridSearchBucketOverride": "control"
+            "-WMFHybridSearchSupportedLanguagesOverride": "en"
+- runFlow:
+    when:
+      true: ${STATE == 'dark'}
+    commands:
+      - launchApp:
+          arguments:
+            "-DidShowOnboarding5.3": "YES"
+            "-WMFHideTipsForTesting": "YES"
+            "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+            "-WMFSuppressGamesAnnouncementForTesting": "YES"
+            "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+            "-WMFHybridSearchBucketOverride": "control"
+            "-WMFHybridSearchSupportedLanguagesOverride": "en"
+- extendedWaitUntil:
+    visible:
+      id: "profile-button"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: .maestro/screenshots/ios-system-dark-theme-main-${STATE}
+# Settings: large uniform background for the runner's pixel-count measurement.
+- tapOn:
+    id: "profile-button"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "App theme"
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: .maestro/screenshots/ios-system-dark-theme-settings-${STATE}
+# Appearance settings (iOS counterpart of Android's theme chooser dialog):
+# shows the "Default" (match system) row checked plus the theme list.
+- tapOn: "App theme"
+- extendedWaitUntil:
+    visible: "Dim images"
+    timeout: 10000
+- assertVisible: "Default"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: .maestro/screenshots/ios-system-dark-theme-chooser-${STATE}

@@ -1,0 +1,220 @@
+{
+ "events": [
+  {
+   "text": "A solar eclipse darkens the skies over much of Europe at midday.",
+   "year": 1912,
+   "pages": [
+    {
+     "title": "Solar eclipse",
+     "description": "Astronomical phenomenon",
+     "extract": "A solar eclipse occurs when the Moon passes between Earth and the Sun.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/320px-errortrigger-skip-1.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Solar_eclipse"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Solar_eclipse"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "The first transatlantic radio broadcast of an orchestral concert takes place.",
+   "year": 1925,
+   "pages": [
+    {
+     "title": "Radio broadcasting",
+     "description": "Distribution of audio content",
+     "extract": "Radio broadcasting is the transmission of audio over radio waves.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/330px-errortrigger-log-1.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Radio_broadcasting"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Radio_broadcasting"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "A fleet of fishing vessels is lost in a sudden storm off the northern coast.",
+   "year": 1938,
+   "pages": [
+    {
+     "title": "Fishing vessel",
+     "description": "Boat used to catch fish",
+     "extract": "A fishing vessel is a boat or ship used to catch fish in the sea.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/320px-errortrigger-skip-2.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Fishing_vessel"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Fishing_vessel"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "The world's longest suspension bridge of its era opens to traffic.",
+   "year": 1951,
+   "pages": [
+    {
+     "title": "Suspension bridge",
+     "description": "Type of bridge",
+     "extract": "A suspension bridge is a type of bridge in which the deck is hung below suspension cables.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/330px-errortrigger-log-2.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Suspension_bridge"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Suspension_bridge"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "A famous chess grandmaster wins the world championship in a decisive final game.",
+   "year": 1963,
+   "pages": [
+    {
+     "title": "World Chess Championship",
+     "description": "Chess competition",
+     "extract": "The World Chess Championship is played to determine the world champion in chess.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/320px-errortrigger-skip-3.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/World_Chess_Championship"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/World_Chess_Championship"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "An expedition reaches the summit of a previously unclimbed Himalayan peak.",
+   "year": 1976,
+   "pages": [
+    {
+     "title": "Mountaineering",
+     "description": "Sport of climbing mountains",
+     "extract": "Mountaineering is the set of outdoor activities that involves ascending mountains.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/330px-errortrigger-log-3.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Mountaineering"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Mountaineering"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "A computer defeats a reigning national champion in a televised exhibition match.",
+   "year": 1988,
+   "pages": [
+    {
+     "title": "Computer chess",
+     "description": "Computer hardware and software capable of playing chess",
+     "extract": "Computer chess includes both hardware and software capable of playing chess.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/320px-errortrigger-skip-4.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Computer_chess"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Computer_chess"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "A spacecraft transmits the first close-up images of a distant icy moon.",
+   "year": 1997,
+   "pages": [
+    {
+     "title": "Space probe",
+     "description": "Uncrewed spacecraft",
+     "extract": "A space probe is an uncrewed spacecraft that travels through space to collect science data.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/330px-errortrigger-log-4.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Space_probe"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Space_probe"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "A massive digital archive of historical newspapers is made freely available online.",
+   "year": 2008,
+   "pages": [
+    {
+     "title": "Digital library",
+     "description": "Online collection of digital objects",
+     "extract": "A digital library is an online database of digital objects such as text and images.",
+     "thumbnail": {
+      "source": "http://localhost:8081/imgs/320px-errortrigger-skip-5.png",
+      "width": 320,
+      "height": 320
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Digital_library"
+      },
+      "mobile": {
+       "page": "https://en.m.wikipedia.org/wiki/Digital_library"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -121,7 +121,26 @@ class ViewControllerRouter: NSObject {
         case .audio(let audioURL):
             try? AVAudioSession.sharedInstance().setCategory(.playback)
             let vc = AVPlayerViewController()
-            let player = AVPlayer(url: audioURL)
+            var playbackURL = audioURL
+            #if DEBUG
+            // Dev/test seam (Maestro pronunciation-user-agent flow): redirect the
+            // audio fetch to a local fixture server (e.g. localhost:8081) so the
+            // request's User-Agent is observable server-side. Mirrors the
+            // -WMF...Override launch-argument seams in WMFData's URL+API.
+            if let overrideHost = UserDefaults.standard.string(forKey: "WMFAudioURLHostOverride"),
+               !overrideHost.isEmpty,
+               var components = URLComponents(url: audioURL, resolvingAgainstBaseURL: false) {
+                let parts = overrideHost.split(separator: ":")
+                components.scheme = "http"
+                components.host = parts.first.map(String.init)
+                components.port = parts.count > 1 ? Int(parts[1]) : nil
+                playbackURL = components.url ?? audioURL
+            }
+            #endif
+            // Android parity (6c43d3fe3c): media player requests must carry the app
+            // User-Agent instead of the platform default (AppleCoreMedia/...).
+            let asset = AVURLAsset(url: playbackURL, options: [AVURLAssetHTTPUserAgentKey: WikipediaAppUtils.versionedUserAgent()])
+            let player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
             vc.player = player
             return presentOrPush(vc, with: completion)
         case .talk(let linkURL):

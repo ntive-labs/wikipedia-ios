@@ -1,0 +1,79 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search enabled for French + French strings (6240fa0d02, 6d0b3e0c4e, e95b52efc6)
+tags:
+  - mock
+  - hybrid-search
+---
+# Mirrors Android hybrid-search-fr-strings.yaml: "fr" is in the compiled-in
+# supported-languages list (6240fa0d02), and the FR hybrid-search strings from
+# Android 6d0b3e0c4e are now ported, so the onboarding, results header,
+# turn-off menu, and hybrid search hint all render the new French copy.
+#
+# The flow launches with French as the device/app language and NO
+# -WMFHybridSearchSupportedLanguagesOverride, so the hybrid onboarding can only
+# appear if fr is genuinely supported in production code. Seven of the asserted
+# strings changed in 6d0b3e0c4e, so the flow discriminates against the
+# pre-commit copy (e.g. old title "Une nouvelle façon de faire des recherches").
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "lexicalSemantic"
+      "-WMFMediaWikiAPIBaseURLOverride": "http://localhost:8081/"
+      "-AppleLanguages": "(fr)"
+# French chrome proves the app language took effect.
+- tapOn: "Rechercher"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-search-tab
+# Entering search intercepts with the hybrid onboarding — only possible because
+# the fr primary app language is in the compiled-in supported list. The copy is
+# the values-fr equivalent ported from Android 6d0b3e0c4e.
+- extendedWaitUntil:
+    visible: "Une nouvelle façon de rechercher"
+    timeout: 10000
+- assertVisible: "Bêta"
+- assertVisible: "Posez des questions, obtenez des réponses"
+- assertVisible: "Cette fonctionnalité expérimentale utilise le langage naturel. Au lieu de rechercher des mots-clés, décrivez ce que vous voulez savoir."
+- assertVisible: "Fonctionnalité bêta"
+- assertVisible: "Disponible pour une durée limitée pendant cette phase de test."
+- assertVisible: "En savoir plus"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-onboarding
+# Sample queries: e95b52efc6 replaced the translated default queries with a
+# curated no-translate French set of 5 (keyed on the fr app language).
+# Pre-commit builds still show the old translated defaults ("Premiers Jeux
+# Olympiques", "ARN ou ADN", the pizza query, ...) and fail these assertions.
+- scrollUntilVisible:
+    element: "Comment les langues disparaissent-elles ?"
+- assertVisible: "Besoin d'inspiration ?"
+- assertVisible: "Pourquoi les étoiles semblent-elles scintiller la nuit ?"
+- assertVisible: "Origine des Jeux Olympiques"
+- assertVisible: "ADN ou ARN"
+- assertVisible: "Pourquoi rêvons-nous ?"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-onboarding-queries
+# Example query opts in and starts a hybrid search; the results header shows
+# the new attribution line.
+- tapOn: "Origine des Jeux Olympiques"
+- extendedWaitUntil:
+    visible: "Issu d’articles Wikipédia rédigés par des humains"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-results
+# Info menu carries the renamed turn-off action (tap by symbol id — the
+# label localizes to "Informations" in French).
+- tapOn:
+    id: "info.circle"
+- assertVisible: "Désactiver cette fonctionnalité expérimentale"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-turn-off-menu
+- tapOn:
+    point: "50%,90%"
+# Group B = lexical results first; scroll down to the semantic rating cards.
+- scrollUntilVisible:
+    element: "Évaluez ce résultat"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-rate-card
+# Clearing the query (X) returns to the search box, which shows the hybrid
+# placeholder from this commit.
+- tapOn: "Effacer le texte"
+- assertVisible: "Rechercher ou poser une question"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-hint

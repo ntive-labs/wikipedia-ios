@@ -362,9 +362,20 @@ extension ArticleWebMessagingController: WKScriptMessageHandler {
         }
 
         func getPronunciationAction(with data: [String: Any]?) -> Action? {
-            guard let urlString = data?["url"] as? String else {
+            guard var urlString = data?["url"] as? String else {
                 return nil
             }
+            #if DEBUG
+            // Dev/test seam (Maestro pronunciation-user-agent flow): substitute the
+            // pronunciation URL PCS sent (nowadays a pre-transcoded .mp3, which routes
+            // to a web view) with a Wikimedia-hosted .ogg URL — the historical PCS
+            // payload — so the full production pipeline (Router audio-file gate,
+            // transcoded-mp3 adjustment, AVPlayer presentation) is exercised.
+            if let override = UserDefaults.standard.string(forKey: "WMFPronunciationAudioURLOverride"),
+               !override.isEmpty {
+                urlString = override
+            }
+            #endif
             return .link(href: urlString, text: nil, title: nil)
         }
 

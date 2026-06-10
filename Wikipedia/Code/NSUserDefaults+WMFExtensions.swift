@@ -132,7 +132,7 @@ let WMFYearToSessionSecondsMapping =  "WMFYearToSessionSecondsMapping"
         let name = string(forKey: WMFAppThemeName)
         let systemDarkMode = systemDarkModeEnabled
         guard name != nil, name != Theme.defaultThemeName else {
-            return systemDarkMode ? Theme.black.analyticsName : Theme.light.analyticsName
+            return systemDarkMode ? Theme.dark.analyticsName : Theme.light.analyticsName
         }
         
         if Theme.withName(name)?.name == Theme.light.name {
@@ -156,7 +156,7 @@ let WMFYearToSessionSecondsMapping =  "WMFYearToSessionSecondsMapping"
         let systemDarkMode = traitCollection.userInterfaceStyle == .dark
         systemDarkModeEnabled = systemDarkMode
         guard name != nil, name != Theme.defaultThemeName else {
-                return systemDarkMode ? Theme.black.withDimmingEnabled(wmf_isImageDimmingEnabled) : .light
+                return systemDarkMode ? Theme.dark.withDimmingEnabled(wmf_isImageDimmingEnabled) : .light
         }
         let theme = Theme.withName(name) ?? Theme.light
         return theme.isDark ? theme.withDimmingEnabled(wmf_isImageDimmingEnabled) : theme
