@@ -112,6 +112,38 @@ import CocoaLumberjackSwift
         )
     }
 
+    // MARK: - Hybrid Search
+
+    public func getHybridSearchExperiment() -> ExperimentImpl {
+        let dataController = WMFHybridSearchDataController.shared
+
+        let group: String
+        switch WMFHybridSearchDataController.GroupName(rawValue: dataController.assignedGroupName) ?? .control {
+        case .control:
+            group = "control"
+        case .lexicalSemantic:
+            group = "lexicalsemantic"
+        case .semanticLexical:
+            group = "semanticlexical"
+        }
+
+        let appInstallID: String? = try? WMFDataEnvironment.current.crossProcessUserDefaultsStore?.load(key: WMFUserDefaultsKey.appInstallID.rawValue)
+
+        return ExperimentImpl(name: "apps_hybridsearch", group: group, subjectId: appInstallID, isLoggable: {
+            let languageCode = MWKDataStore.shared().languageLinkController.appLanguage?.languageCode
+            return dataController.shouldInstrument(languageCode: languageCode)
+        })
+    }
+
+    public func getPageData(articleTitle: String, languageCode: String?) -> PageData {
+        return PageData(
+            title: articleTitle.denormalizedPageTitle ?? articleTitle,
+            namespaceId: 0,
+            namespaceName: "MAIN",
+            contentLanguage: languageCode
+        )
+    }
+
     // MARK: - EventSender
 
     public func sendEvents(_ events: [Event]) {

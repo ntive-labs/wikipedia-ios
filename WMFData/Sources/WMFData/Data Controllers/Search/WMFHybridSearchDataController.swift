@@ -141,6 +141,10 @@ public final class WMFHybridSearchDataController {
         return isTestActive && isHybridSearchEnabled && isTestGroupUser() && isLanguageSupported(languageCode)
     }
 
+    public func shouldInstrument(languageCode: String?) -> Bool {
+        return isTestActive && isLanguageSupported(languageCode)
+    }
+
     // MARK: - Semantic Search
 
     public func fetchSemanticSearchResults(query: String, languageCode: String, count: Int = 3) async throws -> [WMFSemanticSearchResult] {
