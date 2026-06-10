@@ -1,0 +1,51 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search onboarding and example-query search (experiment group B)
+tags:
+  - mock
+  - hybrid-search
+---
+# Prerequisites (handled by run-hybrid-search.sh):
+#   - fixture server on localhost:8081 (semantic API route)
+# Lexical search runs against live Wikipedia; assertions target the mocked
+# semantic content and structural UI, not live lexical titles.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "lexicalSemantic"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+      "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+- tapOn: "Search"
+- assertVisible: "A new way to search"
+- assertVisible: "Beta"
+- assertVisible: "Ask questions, get answers"
+- assertVisible: "Need inspiration?"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-onboarding
+# Learn More opens the info page in Safari and logs click/learn_more (was
+# learn_button before Android b7745030f3); the onboarding stays presented in
+# the app, so relaunching (without clearState) returns to it.
+- tapOn: "Learn more"
+- extendedWaitUntil:
+    notVisible: "Need inspiration?"
+    timeout: 10000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-onboarding-learn-more-browser
+- launchApp:
+    appId: org.wikimedia.wikipedia
+    stopApp: false
+- extendedWaitUntil:
+    visible: "A new way to search"
+    timeout: 10000
+- tapOn: "When was Pluto unlisted as a planet?"
+# Example query starts a hybrid search (group B: lexical first).
+- extendedWaitUntil:
+    visible: "Sourced from human generated Wikipedia articles"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-results-from-onboarding
+- scrollUntilVisible:
+    element: "Rate this result"
+- assertVisible: "Pluto"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-results-semantic-cards
