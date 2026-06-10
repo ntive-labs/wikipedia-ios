@@ -1,0 +1,42 @@
+appId: org.wikimedia.wikipedia
+name: Search clear (X) button clears the query and keeps search active
+tags:
+  - mock
+  - hybrid-search
+---
+# Prerequisites (handled by run-hybrid-search.sh):
+#   - fixture server on localhost:8081 (semantic API route)
+# Mirrors Android's hybrid-search-close-button flow: clearing the query must
+# keep search active and log search_close; Cancel logs search_back.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "semanticLexical"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+      "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+- tapOn: "Search"
+- assertVisible: "A new way to search"
+- tapOn: "Get started"
+- assertVisible: "Search or ask anything"
+- inputText: "When was Pluto unlisted as a planet?"
+- extendedWaitUntil:
+    visible: "Search for:.*"
+    timeout: 10000
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Sourced from human generated Wikipedia articles"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-close-before
+# The clear (X) button empties the query but search stays active, and the
+# cleared query is recorded as a recent search (Android parity).
+- tapOn: "Clear text"
+- assertVisible: "Search or ask anything"
+- assertVisible: "When was Pluto unlisted as a planet?"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-close-after
+# Dismissing search (the ✕ close button) logs search_back.
+- tapOn: "Close"

@@ -1,0 +1,46 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search shows the "Search for:" bar when title-only search has no results
+tags:
+  - mock
+  - hybrid-search
+---
+# Mirrors Android 9512546822: in the experiment's title-only (typing) screen,
+# zero lexical results must show the pinned "Search for:" semantic-search bar
+# instead of a "No results found" empty state, and tapping the bar must run
+# the semantic search for the raw query.
+#
+# Prerequisites (handled by run-hybrid-search.sh):
+#   - fixture server on localhost:8081 (semantic API route)
+# Lexical search runs live, so the no-results case uses a gibberish token
+# that returns nothing from prefix or full-text search.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "semanticLexical"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+      "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+- tapOn: "Search"
+- assertVisible: "A new way to search"
+- tapOn: "Get started"
+- assertVisible: "Search or ask anything"
+- inputText: "zzyzxnoresultsabcxyz"
+# Zero title results: the suggestion list is empty, but the pinned
+# "Search for:" bar must still appear...
+- extendedWaitUntil:
+    visible: "Search for:.*"
+    timeout: 15000
+# ...and no generic empty state may replace it.
+- assertNotVisible: "No results found"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-empty-title-only
+# Tapping the bar runs the semantic search for the raw query.
+- tapOn: "Search for:.*"
+- extendedWaitUntil:
+    visible: "Sourced from human generated Wikipedia articles"
+    timeout: 20000
+- assertVisible: "Rate this result"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-empty-title-only-results
