@@ -1,0 +1,127 @@
+appId: org.wikimedia.wikipedia
+name: Which Came First plays through a day with insufficient On This Day events
+tags:
+  - wikigames
+---
+# The fixture server (run-wikigames-insufficient.sh) serves only 9 usable
+# On This Day events (4 real pairs + 1 leftover). Pre-port, the pairing loop
+# produced 4 questions, fetchOrStartWhichCameFirstDailySession threw
+# insufficientQuestions, the feed card was hidden, and entering the game any
+# other way locked on the error screen. With the e17bbd4e49 port the leftover
+# event paired with a synthesized blank year+10 event; since the 4824d3a9f7
+# port it instead pairs with a recycled real event drawn from a copy of the
+# pool. Either way the game completes normally.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFWikimediaRestAPIBaseURLOverride": "http://localhost:8081/"
+# A fresh feed fetch can be slow; nudge it with a pull-to-refresh if needed.
+- extendedWaitUntil:
+    visible: "Featured article"
+    timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible: "Featured article"
+    commands:
+      - swipe:
+          start: 50%, 30%
+          end: 50%, 70%
+      - extendedWaitUntil:
+          visible: "Featured article"
+          timeout: 45000
+# The daily-game availability check fails while the WMFData store is still
+# initializing on a cold start, which removes the games group. Keep doing
+# pull-to-refreshes at the feed top until the warm content-source pass
+# re-creates it. With only 9 events this availability check passing at all
+# is part of the fix under test.
+- repeat:
+    times: 8
+    while:
+      notVisible: "Games"
+    commands:
+      - swipe:
+          start: 50%, 25%
+          end: 50%, 75%
+      - extendedWaitUntil:
+          visible: "Games"
+          timeout: 20000
+          optional: true
+- scrollUntilVisible:
+    element:
+      text: "Which came first?"
+    timeout: 15000
+    centerElement: true
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-card
+# Card -> splash screen.
+- tapOn: "Play today's game"
+- extendedWaitUntil:
+    visible: "About this game"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-menu
+# Splash -> game. Question 1 must load instead of the error screen.
+- tapOn: "Play today's game"
+- extendedWaitUntil:
+    visible: "Question 1 of 5"
+    timeout: 15000
+- assertNotVisible: "Something went wrong"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q1
+- tapOn:
+    point: 50%, 43%
+- extendedWaitUntil:
+    visible: "Submit"
+    timeout: 5000
+- tapOn: "Submit"
+- extendedWaitUntil:
+    visible: "Next"
+    timeout: 8000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q1-revealed
+- tapOn: "Next"
+
+# ---- Questions 2-4 ----
+- repeat:
+    times: 3
+    commands:
+      - extendedWaitUntil:
+          notVisible: "Next"
+          timeout: 8000
+      - tapOn:
+          point: 50%, 43%
+      - extendedWaitUntil:
+          visible: "Submit"
+          timeout: 5000
+      - tapOn: "Submit"
+      - extendedWaitUntil:
+          visible: "Next"
+          timeout: 8000
+      - tapOn: "Next"
+
+# ---- Question 5: the leftover event paired with a recycled real event ----
+- extendedWaitUntil:
+    visible: "Question 5 of 5"
+    timeout: 8000
+- assertNotVisible: "Something went wrong"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q5-fallback
+- tapOn:
+    point: 50%, 43%
+- extendedWaitUntil:
+    visible: "Submit"
+    timeout: 5000
+- tapOn: "Submit"
+- extendedWaitUntil:
+    visible: "See Results"
+    timeout: 8000
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-q5-revealed
+- tapOn: "See Results"
+
+# ---- Results: the game completed instead of locking on the error screen ----
+- extendedWaitUntil:
+    visible: "You scored.*"
+    timeout: 15000
+- assertVisible: "Articles from today's game"
+- takeScreenshot: .maestro/screenshots/ios-wikigames-insufficient-results
