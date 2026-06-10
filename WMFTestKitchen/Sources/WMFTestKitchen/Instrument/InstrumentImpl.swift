@@ -4,6 +4,7 @@ public class InstrumentImpl {
     public let name: String
     private weak var client: TestKitchenClient?
     public var funnel: Funnel?
+    public var experiment: ExperimentImpl?
     private var defaultActionSource: String?
 
     init(name: String, client: TestKitchenClient? = nil) {
@@ -18,9 +19,14 @@ public class InstrumentImpl {
         actionSubtype: String? = nil,
         elementId: String? = nil,
         elementFriendlyName: String? = nil,
+        pageData: PageData? = nil,
         actionContext: [String: Any]? = nil,
         mediawikiDatabase: String? = nil // Adds custom mediawiki > database value for event, otherwise defaults to primary app language wiki.
     ) -> InstrumentImpl {
+
+        if experiment?.isLoggable() == false {
+            return self
+        }
 
         var actionContextFinal: [String: String] = [:]
         funnel?.addActionContext(&actionContextFinal)
@@ -49,7 +55,8 @@ public class InstrumentImpl {
                 elementId: elementId,
                 elementFriendlyName: elementFriendlyName,
                 mediawikiDatabase: mediawikiDatabase
-            )
+            ),
+            pageData: pageData
         )
 
         funnel?.touch()
@@ -71,6 +78,18 @@ public class InstrumentImpl {
     @discardableResult
     public func setDefaultActionSource(_ source: String) -> InstrumentImpl {
         defaultActionSource = source
+        return self
+    }
+
+    @discardableResult
+    public func setExperiment(name: String, group: String) -> InstrumentImpl {
+        experiment = ExperimentImpl(name: name, group: group)
+        return self
+    }
+
+    @discardableResult
+    public func setExperiment(_ experiment: ExperimentImpl?) -> InstrumentImpl {
+        self.experiment = experiment
         return self
     }
 }

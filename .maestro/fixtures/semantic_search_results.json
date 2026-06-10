@@ -1,0 +1,27 @@
+{
+  "language_code": "en",
+  "query": "When was Pluto unlisted as a planet?",
+  "semantic_search_results": [
+    {
+      "page_title": "Pluto",
+      "section_header": "Classification",
+      "section_index": 4,
+      "section_text": "In 2006, the International Astronomical Union (IAU) adopted a formal definition of '''planet'''. Pluto does not clear the neighborhood around its orbit, so it was reclassified as a ''dwarf planet''.",
+      "url": "https://en.wikipedia.org/wiki/Pluto"
+    },
+    {
+      "page_title": "IAU_definition_of_planet",
+      "section_header": "Final definition",
+      "section_index": 2,
+      "section_text": "The definition adopted on 24 August 2006 states that a '''planet''' must orbit the Sun, be rounded by its own gravity, and have cleared the neighbourhood around its orbit.",
+      "url": "https://en.wikipedia.org/wiki/IAU_definition_of_planet"
+    },
+    {
+      "page_title": "Dwarf_planet",
+      "section_header": "History",
+      "section_index": 1,
+      "section_text": "A '''dwarf planet''' is a small planetary-mass object in direct orbit around the Sun, smaller than the eight classical planets but still a world in its own right.",
+      "url": "https://en.wikipedia.org/wiki/Dwarf_planet"
+    }
+  ]
+}
