@@ -88,6 +88,18 @@ expect_events empty-title-only \
   '"action":"show_hybrid_result"' \
   '"assigned":"semanticlexical"'
 
+# Two app languages (en + fr, only en hybrid-enabled): entering hybrid results
+# resigns the keyboard; switching to the Français tab shows the standard
+# "No results found" state (keyboard stays down); switching back to English
+# re-renders the empty title-only state and must bring the keyboard back up
+# (Android 4778ade23b). The flow asserts keyboard keys directly — on iOS the
+# software keyboard is part of the accessibility hierarchy.
+maestro --device "$UDID" test .maestro/hybrid-search-no-results-keyboard.yaml
+expect_events no-results-keyboard \
+  '"action":"search_init"' \
+  '"element_id":"semantic_search_explicit"' \
+  '"assigned":"semanticlexical"'
+
 maestro --device "$UDID" test .maestro/hybrid-search-control.yaml
 expect_events control \
   '"action":"search_impression"' \
