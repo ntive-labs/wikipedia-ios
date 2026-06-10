@@ -1,18 +1,19 @@
 appId: org.wikimedia.wikipedia
-name: Hybrid search enabled for French app language (6240fa0d02)
+name: Hybrid search enabled for French + French strings (6240fa0d02, 6d0b3e0c4e)
 tags:
   - mock
   - hybrid-search
 ---
-# Mirrors Android hybrid-search-fr-enabled.yaml: "fr" is now in
-# WMFHybridSearchDataController's compiled-in supported-languages list. The flow
-# launches with French as the device/app language and NO
-# -WMFHybridSearchSupportedLanguagesOverride, so the hybrid onboarding can only
-# appear if fr is genuinely supported in production code.
+# Mirrors Android hybrid-search-fr-strings.yaml: "fr" is in the compiled-in
+# supported-languages list (6240fa0d02), and the FR hybrid-search strings from
+# Android 6d0b3e0c4e are now ported, so the onboarding, results header,
+# turn-off menu, and hybrid search hint all render the new French copy.
 #
-# -AppleLanguages localizes the whole app, so the chrome is French; the hybrid
-# onboarding copy asserts the English fallback (FR hybrid strings arrive in a
-# later sync commit).
+# The flow launches with French as the device/app language and NO
+# -WMFHybridSearchSupportedLanguagesOverride, so the hybrid onboarding can only
+# appear if fr is genuinely supported in production code. Seven of the asserted
+# strings changed in 6d0b3e0c4e, so the flow discriminates against the
+# pre-commit copy (e.g. old title "Une nouvelle façon de faire des recherches").
 - launchApp:
     clearState: true
     arguments:
@@ -26,11 +27,49 @@ tags:
       "-AppleLanguages": "(fr)"
 # French chrome proves the app language took effect.
 - tapOn: "Rechercher"
-- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-search-tab
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-search-tab
 # Entering search intercepts with the hybrid onboarding — only possible because
-# the fr primary app language is in the compiled-in supported list.
+# the fr primary app language is in the compiled-in supported list. The copy is
+# the values-fr equivalent ported from Android 6d0b3e0c4e.
 - extendedWaitUntil:
-    visible: "A new way to search"
+    visible: "Une nouvelle façon de rechercher"
     timeout: 10000
-- assertVisible: "Beta"
-- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-onboarding
+- assertVisible: "Bêta"
+- assertVisible: "Posez des questions, obtenez des réponses"
+- assertVisible: "Cette fonctionnalité expérimentale utilise le langage naturel. Au lieu de rechercher des mots-clés, décrivez ce que vous voulez savoir."
+- assertVisible: "Fonctionnalité bêta"
+- assertVisible: "Disponible pour une durée limitée pendant cette phase de test."
+- assertVisible: "En savoir plus"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-onboarding
+# Sample queries (updated wording in 6d0b3e0c4e).
+- scrollUntilVisible:
+    element: "Pourquoi les gens mettent-ils de l'ananas sur leur pizza ?"
+- assertVisible: "Besoin d'inspiration ?"
+- assertVisible: "Quand Pluton a-t-elle été retirée de la liste des planètes ?"
+- assertVisible: "Premiers Jeux Olympiques"
+- assertVisible: "ARN ou ADN"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-onboarding-queries
+# Example query opts in and starts a hybrid search; the results header shows
+# the new attribution line.
+- tapOn: "Premiers Jeux Olympiques"
+- extendedWaitUntil:
+    visible: "Issu d’articles Wikipédia rédigés par des humains"
+    timeout: 20000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-results
+# Info menu carries the renamed turn-off action (tap by symbol id — the
+# label localizes to "Informations" in French).
+- tapOn:
+    id: "info.circle"
+- assertVisible: "Désactiver cette fonctionnalité expérimentale"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-turn-off-menu
+- tapOn:
+    point: "50%,90%"
+# Group B = lexical results first; scroll down to the semantic rating cards.
+- scrollUntilVisible:
+    element: "Évaluez ce résultat"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-rate-card
+# Clearing the query (X) returns to the search box, which shows the hybrid
+# placeholder from this commit.
+- tapOn: "Effacer le texte"
+- assertVisible: "Rechercher ou poser une question"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-strings-hint

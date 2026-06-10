@@ -111,12 +111,14 @@ expect_events no-results-keyboard \
   '"assigned":"semanticlexical"'
 
 # French app language, NO supported-languages override: onboarding must appear
-# because "fr" is now in the compiled-in supported list (6240fa0d02). French UI
-# chrome (-AppleLanguages) + English-fallback hybrid onboarding copy (the FR
-# hybrid strings arrive in a later sync commit).
+# because "fr" is in the compiled-in supported list (6240fa0d02), and it must
+# render the French hybrid-search copy ported from Android 6d0b3e0c4e
+# (onboarding, sample queries, results header, turn-off menu, search hint).
+# Mirrors Android's hybrid-search-fr-strings.yaml.
 maestro --device "$UDID" test .maestro/hybrid-search-fr-enabled.yaml
 expect_events fr-enabled \
   '"funnel_name":"hybrid_search_onboarding"' \
+  '"element_id":"onboarding_query"' \
   '"assigned":"lexicalsemantic"'
 
 maestro --device "$UDID" test .maestro/hybrid-search-control.yaml
