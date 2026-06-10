@@ -51,9 +51,21 @@ public final class WMFHybridSearchOnboardingViewModel {
         "Εθνικό πιάτο στην Ελλάδα"
     ]
 
+    /// Untranslated example queries for French, matching Android's strings_no_translate.xml.
+    private static let frenchExampleQueries = [
+        "Pourquoi les étoiles semblent-elles scintiller la nuit ?",
+        "Origine des Jeux Olympiques",
+        "ADN ou ARN",
+        "Pourquoi rêvons-nous ?",
+        "Comment les langues disparaissent-elles ?"
+    ]
+
     var exampleQueries: [String] {
         if languageCode?.caseInsensitiveCompare("el") == .orderedSame {
             return Self.greekExampleQueries
+        }
+        if languageCode?.caseInsensitiveCompare("fr") == .orderedSame {
+            return Self.frenchExampleQueries
         }
         return localizedStrings.exampleQueries
     }
