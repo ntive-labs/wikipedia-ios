@@ -112,6 +112,38 @@ import CocoaLumberjackSwift
         )
     }
 
+    // MARK: - Hybrid Search
+
+    public func getHybridSearchExperiment() -> ExperimentImpl {
+        let dataController = WMFHybridSearchDataController.shared
+
+        let group: String
+        switch WMFHybridSearchDataController.GroupName(rawValue: dataController.assignedGroupName) ?? .control {
+        case .control:
+            group = "control"
+        case .lexicalSemantic:
+            group = "lexicalsemantic"
+        case .semanticLexical:
+            group = "semanticlexical"
+        }
+
+        let appInstallID: String? = try? WMFDataEnvironment.current.crossProcessUserDefaultsStore?.load(key: WMFUserDefaultsKey.appInstallID.rawValue)
+
+        return ExperimentImpl(name: "apps_hybridsearch", group: group, subjectId: appInstallID, isLoggable: {
+            let languageCode = MWKDataStore.shared().languageLinkController.appLanguage?.languageCode
+            return dataController.shouldInstrument(languageCode: languageCode)
+        })
+    }
+
+    public func getPageData(articleTitle: String, languageCode: String?) -> PageData {
+        return PageData(
+            title: articleTitle.denormalizedPageTitle ?? articleTitle,
+            namespaceId: 0,
+            namespaceName: "MAIN",
+            contentLanguage: languageCode
+        )
+    }
+
     // MARK: - EventSender
 
     public func sendEvents(_ events: [Event]) {
@@ -138,6 +170,23 @@ import CocoaLumberjackSwift
                 let printablePayload = PrintableEventPayload(payload: dict)
                 print("\n\n🧑‍🍳TestKitchen: Scheduling event to be sent to \(event.schema):")
                 print("\(printablePayload)")
+            }
+
+            // Single-line event log, for test assertions. Appended to a file in
+            // the app container (the unified log truncates long messages).
+            if let lineData = try? JSONEncoder().encode(event),
+               let line = String(data: lineData, encoding: .utf8) {
+                NSLog("TKEV %@", line)
+                let logURL = FileManager.default.temporaryDirectory.appendingPathComponent("tkev.log")
+                if let lineData = (line + "\n").data(using: .utf8) {
+                    if let handle = try? FileHandle(forWritingTo: logURL) {
+                        defer { try? handle.close() }
+                        _ = try? handle.seekToEnd()
+                        try? handle.write(contentsOf: lineData)
+                    } else {
+                        try? lineData.write(to: logURL)
+                    }
+                }
             }
 #endif
             

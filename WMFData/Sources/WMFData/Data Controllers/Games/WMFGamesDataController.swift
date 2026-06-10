@@ -321,16 +321,14 @@ extension WMFGamesDataController {
             let event1 = pool.removeFirst()
 
             let yearSpread = max(Int((390.0 - 0.19043 * Double(event1.year))), 5)
-            let partner = pool.first(where: { abs(event1.year - $0.year) <= yearSpread })
-                ?? pool.min(by: { abs(event1.year - $0.year) < abs(event1.year - $1.year) })
-
-            guard let event2 = partner, event2.year != event1.year else { continue }
-            pool.removeAll { $0.year == event2.year && $0.text == event2.text }
+            // Same-year events can't form a question, so skip them when picking a
+            // partner (Android's event pool is year-distinct by construction).
+            let partner = pool.first(where: { $0.year != event1.year && abs(event1.year - $0.year) <= yearSpread })
+                ?? pool.filter({ $0.year != event1.year })
+                    .min(by: { abs(event1.year - $0.year) < abs(event1.year - $1.year) })
 
             let page1 = event1.pages.first
             let thumbnail1 = event1.pages.first(where: { $0.thumbnail?.source != nil })?.thumbnail?.source
-            let page2 = event2.pages.first
-            let thumbnail2 = event2.pages.first(where: { $0.thumbnail?.source != nil })?.thumbnail?.source
 
             let optionA = WMFWhichCameFirstEvent(
                 title: event1.text,
@@ -338,12 +336,30 @@ extension WMFGamesDataController {
                 articleTitle: page1?.title,
                 thumbnailURL: thumbnail1
             )
-            let optionB = WMFWhichCameFirstEvent(
-                title: event2.text,
-                date: makeDate(year: event2.year),
-                articleTitle: page2?.title,
-                thumbnailURL: thumbnail2
-            )
+
+            let optionB: WMFWhichCameFirstEvent
+            if let event2 = partner {
+                pool.removeAll { $0.year == event2.year && $0.text == event2.text }
+                let page2 = event2.pages.first
+                let thumbnail2 = event2.pages.first(where: { $0.thumbnail?.source != nil })?.thumbnail?.source
+                optionB = WMFWhichCameFirstEvent(
+                    title: event2.text,
+                    date: makeDate(year: event2.year),
+                    articleTitle: page2?.title,
+                    thumbnailURL: thumbnail2
+                )
+            } else {
+                // If we cannot find a partner event, pair the leftover event with a
+                // synthesized blank event 10 years later so the day still yields a
+                // full set of questions instead of a stuck error screen
+                // (Android parity: commit e17bbd4e49).
+                optionB = WMFWhichCameFirstEvent(
+                    title: "",
+                    date: makeDate(year: event1.year + 10),
+                    articleTitle: nil,
+                    thumbnailURL: nil
+                )
+            }
 
             let flip = Bool.random()
             questions.append(WMFWhichCameFirstQuestion(
