@@ -1,0 +1,36 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search enabled for French app language (6240fa0d02)
+tags:
+  - mock
+  - hybrid-search
+---
+# Mirrors Android hybrid-search-fr-enabled.yaml: "fr" is now in
+# WMFHybridSearchDataController's compiled-in supported-languages list. The flow
+# launches with French as the device/app language and NO
+# -WMFHybridSearchSupportedLanguagesOverride, so the hybrid onboarding can only
+# appear if fr is genuinely supported in production code.
+#
+# -AppleLanguages localizes the whole app, so the chrome is French; the hybrid
+# onboarding copy asserts the English fallback (FR hybrid strings arrive in a
+# later sync commit).
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "lexicalSemantic"
+      "-WMFMediaWikiAPIBaseURLOverride": "http://localhost:8081/"
+      "-AppleLanguages": "(fr)"
+# French chrome proves the app language took effect.
+- tapOn: "Rechercher"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-search-tab
+# Entering search intercepts with the hybrid onboarding — only possible because
+# the fr primary app language is in the compiled-in supported list.
+- extendedWaitUntil:
+    visible: "A new way to search"
+    timeout: 10000
+- assertVisible: "Beta"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-fr-onboarding

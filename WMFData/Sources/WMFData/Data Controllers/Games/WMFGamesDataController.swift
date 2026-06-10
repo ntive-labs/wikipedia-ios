@@ -307,7 +307,16 @@ extension WMFGamesDataController {
     private static func makeWhichCameFirstQuestions(from events: [WMFOnThisDayEvent], month: Int, day: Int, count: Int) -> [WMFWhichCameFirstQuestion] {
         let calendar = Calendar(identifier: .gregorian)
         var pool = events.filter { !$0.pages.isEmpty }.sorted { $0.year < $1.year }
+        // Keep a copy of the full pool to draw from in case the live pool doesn't
+        // have enough events (Android parity: commit 4824d3a9f7 — days with
+        // insufficient events recycle already-used events instead of pairing the
+        // leftover with a synthesized blank year+10 event).
+        let poolCopy = pool
         var questions: [WMFWhichCameFirstQuestion] = []
+
+        // Android would trap on `index % 0` below; a day with no usable events
+        // must simply stay unavailable.
+        guard !poolCopy.isEmpty else { return [] }
 
         func makeDate(year: Int) -> Date {
             var components = DateComponents()
@@ -317,20 +326,32 @@ extension WMFGamesDataController {
             return calendar.date(from: components) ?? Date()
         }
 
-        while questions.count < count && !pool.isEmpty {
-            let event1 = pool.removeFirst()
+        for index in 0..<count {
+            let event1 = pool.isEmpty ? poolCopy[index % poolCopy.count] : pool.removeFirst()
 
             let yearSpread = max(Int((390.0 - 0.19043 * Double(event1.year))), 5)
-            let partner = pool.first(where: { abs(event1.year - $0.year) <= yearSpread })
-                ?? pool.min(by: { abs(event1.year - $0.year) < abs(event1.year - $1.year) })
+            // Same-year events can't form a question, so skip them when picking a
+            // partner (Android's event pool is year-distinct by construction).
+            var partner = pool.first(where: { $0.year != event1.year && abs(event1.year - $0.year) <= yearSpread })
+                ?? pool.filter({ $0.year != event1.year })
+                    .min(by: { abs(event1.year - $0.year) < abs(event1.year - $1.year) })
 
-            guard let event2 = partner, event2.year != event1.year else { continue }
+            if partner == nil {
+                // The live pool is exhausted (or holds no different-year event):
+                // recycle any different-year event from the full pool copy.
+                partner = poolCopy.first(where: { $0.year != event1.year })
+            }
+
+            guard let event2 = partner else {
+                // Every usable event shares event1's year; no question can be
+                // formed. Android skips the pair in the same way.
+                continue
+            }
+
             pool.removeAll { $0.year == event2.year && $0.text == event2.text }
 
             let page1 = event1.pages.first
             let thumbnail1 = event1.pages.first(where: { $0.thumbnail?.source != nil })?.thumbnail?.source
-            let page2 = event2.pages.first
-            let thumbnail2 = event2.pages.first(where: { $0.thumbnail?.source != nil })?.thumbnail?.source
 
             let optionA = WMFWhichCameFirstEvent(
                 title: event1.text,
@@ -338,6 +359,9 @@ extension WMFGamesDataController {
                 articleTitle: page1?.title,
                 thumbnailURL: thumbnail1
             )
+
+            let page2 = event2.pages.first
+            let thumbnail2 = event2.pages.first(where: { $0.thumbnail?.source != nil })?.thumbnail?.source
             let optionB = WMFWhichCameFirstEvent(
                 title: event2.text,
                 date: makeDate(year: event2.year),
@@ -345,11 +369,16 @@ extension WMFGamesDataController {
                 thumbnailURL: thumbnail2
             )
 
+            // A recycled partner can predate event1, so derive the correct answer
+            // from the option dates rather than from pool order (Android computes
+            // correctness at submit time from min(event1.year, event2.year)).
             let flip = Bool.random()
+            let displayedA = flip ? optionB : optionA
+            let displayedB = flip ? optionA : optionB
             questions.append(WMFWhichCameFirstQuestion(
-                optionA: flip ? optionB : optionA,
-                optionB: flip ? optionA : optionB,
-                correctAnswer: flip ? "B" : "A"
+                optionA: displayedA,
+                optionB: displayedB,
+                correctAnswer: displayedA.date < displayedB.date ? "A" : "B"
             ))
         }
 
