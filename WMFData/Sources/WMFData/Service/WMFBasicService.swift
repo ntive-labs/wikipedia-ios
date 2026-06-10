@@ -220,6 +220,30 @@ public final class WMFBasicService: WMFService {
         }
     }
     
+    public func performDecodableGET<R: WMFServiceRequest, T: Decodable>(request: R, completion: @escaping (Result<(T, HTTPURLResponse?), Error>) -> Void) {
+
+        performGET(request: request) { data, response, error in
+
+            if let error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let data else {
+                completion(.failure(WMFServiceError.missingData))
+                return
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                let result: T = try decoder.decode(T.self, from: data)
+                completion(.success((result, response as? HTTPURLResponse)))
+            } catch let error {
+                completion(.failure(error))
+            }
+        }
+    }
+
     public func performDecodablePOST<R: WMFServiceRequest, T: Decodable>(request: R, completion: @escaping (Result<T, Error>) -> Void) {
         
         performPOST(request: request) { data, response, error in

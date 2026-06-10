@@ -22,7 +22,7 @@ public final class WMFHybridSearchDataController {
     static let semanticSearchBaseURLUserDefaultsKey = "WMFSemanticSearchBaseURL"
 
     private static let defaultSemanticSearchBaseURLString = "https://semantic-search.wmcloud.org/"
-    private static let defaultSupportedLanguages = ["el"]
+    private static let defaultSupportedLanguages = ["el", "fr"]
     private static let experimentPercentage = 33
 
     private let service: WMFService?
@@ -174,6 +174,66 @@ public final class WMFHybridSearchDataController {
         return response.results
     }
 
+    /// Semantic search via the MediaWiki full-text search API (Android `fullTextSearchResponse`),
+    /// used for every supported language except Greek: the standard full-text search request with
+    /// `cirrusSemanticSearch=true`, snippet + sectiontitle generator props, and the `x-search-id`
+    /// response header surfaced for analytics.
+    public func fetchSemanticSearchResultsViaFullTextSearch(query: String, languageCode: String, count: Int = 3) async throws -> WMFSemanticFullTextSearchResults {
+        guard let service else {
+            throw WMFDataControllerError.basicServiceUnavailable
+        }
+
+        let project = WMFProject.wikipedia(WMFLanguage(languageCode: languageCode, languageVariantCode: nil))
+        guard let url = URL.mediaWikiAPIURL(project: project) else {
+            throw WMFDataControllerError.failureCreatingRequestURL
+        }
+
+        // Mirrors Android Service.fullTextSearchResponse.
+        let parameters: [String: Any] = [
+            "action": "query",
+            "format": "json",
+            "formatversion": "2",
+            "converttitles": "",
+            "prop": "description|pageimages|pageprops|coordinates|info",
+            "ppprop": "mainpage|disambiguation",
+            "generator": "search",
+            "gsrnamespace": "0",
+            "gsrwhat": "text",
+            "inprop": "varianttitles|displaytitle",
+            "gsrinfo": "",
+            "gsrprop": "redirecttitle|snippet|sectiontitle",
+            "piprop": "thumbnail",
+            "pilicense": "any",
+            "pithumbsize": "320",
+            "gsrsearch": query,
+            "gsrlimit": String(count),
+            "gsroffset": "0",
+            "cirrusSemanticSearch": "true"
+        ]
+
+        let request = WMFBasicServiceRequest(url: url, method: .GET, parameters: parameters, acceptType: .json)
+
+        let (response, httpResponse): (WMFMediaWikiFullTextSearchResponse, HTTPURLResponse?) = try await withCheckedThrowingContinuation { continuation in
+            service.performDecodableGET(request: request) { (result: Result<(WMFMediaWikiFullTextSearchResponse, HTTPURLResponse?), Error>) in
+                continuation.resume(with: result)
+            }
+        }
+
+        let pages = (response.query?.pages ?? []).sorted { ($0.index ?? Int.max) < ($1.index ?? Int.max) }
+        let results = pages.map { page in
+            WMFSemanticFullTextSearchResults.Result(
+                title: page.title,
+                snippetHTML: page.snippet ?? "",
+                sectionTitle: page.sectiontitle,
+                description: page.description,
+                thumbnailURL: page.thumbnail?.source.flatMap { URL(string: $0) }
+            )
+        }
+        let xSearchId = httpResponse?.value(forHTTPHeaderField: "x-search-id") ?? ""
+
+        return WMFSemanticFullTextSearchResults(results: results, xSearchId: xSearchId)
+    }
+
     private func semanticSearchURL() -> URL? {
         let baseURLString = UserDefaults.standard.string(forKey: Self.semanticSearchBaseURLUserDefaultsKey) ?? Self.defaultSemanticSearchBaseURLString
         return URL(string: baseURLString)?.appendingPathComponent("api/search")
@@ -234,6 +294,69 @@ public struct WMFSemanticSearchResult: Decodable {
         self.sectionText = sectionText
         self.url = url
     }
+}
+
+/// Semantic results from the MediaWiki full-text search API (`cirrusSemanticSearch=true`),
+/// the non-Greek semantic path introduced by Android 6240fa0d02.
+public struct WMFSemanticFullTextSearchResults {
+
+    public struct Result {
+        public let title: String
+        /// Cirrus search snippet (already HTML).
+        public let snippetHTML: String
+        /// Raw section title from the API (spaces, not underscores), if the match was within a section.
+        public let sectionTitle: String?
+        public let description: String?
+        public let thumbnailURL: URL?
+
+        /// Section anchor fragment: the section title with spaces replaced by underscores
+        /// (Android `StringUtil.addUnderscores` parity).
+        public var fragment: String? {
+            guard let sectionTitle, !sectionTitle.isEmpty else {
+                return nil
+            }
+            return sectionTitle.replacingOccurrences(of: " ", with: "_")
+        }
+
+        public init(title: String, snippetHTML: String, sectionTitle: String?, description: String?, thumbnailURL: URL?) {
+            self.title = title
+            self.snippetHTML = snippetHTML
+            self.sectionTitle = sectionTitle
+            self.description = description
+            self.thumbnailURL = thumbnailURL
+        }
+    }
+
+    public let results: [Result]
+    /// Value of the `x-search-id` response header, or empty when absent.
+    public let xSearchId: String
+
+    public init(results: [Result], xSearchId: String) {
+        self.results = results
+        self.xSearchId = xSearchId
+    }
+}
+
+struct WMFMediaWikiFullTextSearchResponse: Decodable {
+
+    struct Query: Decodable {
+        let pages: [Page]?
+    }
+
+    struct Page: Decodable {
+        let title: String
+        let index: Int?
+        let snippet: String?
+        let sectiontitle: String?
+        let description: String?
+        let thumbnail: Thumbnail?
+    }
+
+    struct Thumbnail: Decodable {
+        let source: String?
+    }
+
+    let query: Query?
 }
 
 struct WMFSemanticSearchResponse: Decodable {

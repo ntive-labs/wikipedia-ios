@@ -584,6 +584,10 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
     private var hybridLexicalTitlesForEvents = ""
     private var hybridSemanticTitlesForEvents = ""
 
+    /// Value of the `x-search-id` response header from the most recent semantic full-text search,
+    /// mirroring Android's `lastXSearchId`. Empty for the Greek wmcloud path and before any search.
+    private var hybridLastXSearchId = ""
+
     private var hybridEventQuery: String {
         hybridSearchTerm ?? searchTerm ?? ""
     }
@@ -593,7 +597,8 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
             "position": position,
             "lexical": hybridLexicalTitlesForEvents,
             "semantic": hybridSemanticTitlesForEvents,
-            "query": hybridEventQuery
+            "query": hybridEventQuery,
+            "x_search_id": hybridLastXSearchId
         ]
     }
 
@@ -697,7 +702,8 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
                     pageData: hybridPageData(title: item.title, languageCode: nil),
                     actionContext: [
                         "position": index + 1,
-                        "query": hybridEventQuery
+                        "query": hybridEventQuery,
+                        "x_search_id": hybridLastXSearchId
                     ]
                 )
             },
@@ -772,6 +778,7 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
 
         logSearchInitIfNeeded(term: term)
 
+        hybridLastXSearchId = ""
         hybridResultsViewModel.loadState = .loading
         hybridResultsViewModel.lexicalItems = []
         hybridResultsViewModel.semanticItems = []
@@ -806,6 +813,7 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
 
             self.searchInstrument?.submitInteraction(action: "show_hybrid_result", actionSource: "search", actionContext: [
                 "query": term,
+                "x_search_id": self.hybridLastXSearchId,
                 "lexical": self.hybridLexicalTitlesForEvents,
                 "semantic": self.hybridSemanticTitlesForEvents
             ])
@@ -855,25 +863,44 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         }
     }
 
-    /// Fetches semantic results and enriches description/thumbnail per title, mirroring Android's
-    /// `action=query prop=info|description|pageimages` enrichment via the existing summary endpoint.
+    /// Fetches semantic results, mirroring Android's `SearchResultsViewModel` semantic branch
+    /// (6240fa0d02): Greek keeps the custom semantic-search service (with per-title
+    /// description/thumbnail enrichment); every other language uses the MediaWiki full-text
+    /// search API with `cirrusSemanticSearch=true`, whose response already carries
+    /// description/thumbnail/snippet/sectiontitle and an `x-search-id` header.
     private func fetchHybridSemanticItems(for term: String, languageCode: String) async -> Result<[WMFHybridSearchSemanticItem], Error> {
         do {
-            let semanticResults = try await hybridSearchDataController.fetchSemanticSearchResults(query: term, languageCode: languageCode, count: 3)
-            let project = WMFProject.wikipedia(WMFLanguage(languageCode: languageCode, languageVariantCode: nil))
-            var items: [WMFHybridSearchSemanticItem] = []
-            for (index, semanticResult) in semanticResults.enumerated() {
-                let summary = try? await WMFArticleSummaryDataController.shared.fetchArticleSummary(project: project, title: semanticResult.title)
-                items.append(WMFHybridSearchSemanticItem(
-                    id: "\(index)-\(semanticResult.rawTitle)",
-                    snippetHTML: semanticResult.processedSnippetHTML,
-                    title: semanticResult.title,
-                    description: summary?.description,
-                    thumbnailURL: summary?.thumbnailURL,
-                    fragment: URLComponents(string: semanticResult.url)?.fragment
-                ))
+            if languageCode == "el" {
+                let semanticResults = try await hybridSearchDataController.fetchSemanticSearchResults(query: term, languageCode: languageCode, count: 3)
+                let project = WMFProject.wikipedia(WMFLanguage(languageCode: languageCode, languageVariantCode: nil))
+                var items: [WMFHybridSearchSemanticItem] = []
+                for (index, semanticResult) in semanticResults.enumerated() {
+                    let summary = try? await WMFArticleSummaryDataController.shared.fetchArticleSummary(project: project, title: semanticResult.title)
+                    items.append(WMFHybridSearchSemanticItem(
+                        id: "\(index)-\(semanticResult.rawTitle)",
+                        snippetHTML: semanticResult.processedSnippetHTML,
+                        title: semanticResult.title,
+                        description: summary?.description,
+                        thumbnailURL: summary?.thumbnailURL,
+                        fragment: URLComponents(string: semanticResult.url)?.fragment
+                    ))
+                }
+                return .success(items)
+            } else {
+                let response = try await hybridSearchDataController.fetchSemanticSearchResultsViaFullTextSearch(query: term, languageCode: languageCode, count: 3)
+                hybridLastXSearchId = response.xSearchId
+                let items = response.results.enumerated().map { index, result in
+                    WMFHybridSearchSemanticItem(
+                        id: "\(index)-\(result.title)",
+                        snippetHTML: result.snippetHTML,
+                        title: result.title,
+                        description: result.description,
+                        thumbnailURL: result.thumbnailURL,
+                        fragment: result.fragment
+                    )
+                }
+                return .success(items)
             }
-            return .success(items)
         } catch {
             return .failure(error)
         }

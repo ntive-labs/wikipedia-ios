@@ -12,6 +12,11 @@ extension URL {
     // https://www.mediawiki.org/wiki/API:REST_API
     private static let baseMediaWikiRestAPIPathComponents = "/w/rest.php/"
     
+    /// Dev/test seam: when set (e.g. via the -WMFMediaWikiAPIBaseURLOverride launch argument),
+    /// MediaWiki Action API requests are redirected to the given base URL so UI-test flows can
+    /// serve canned responses locally. The analog of Android's `mediaWikiBaseUri` dev setting.
+    private static let mediaWikiAPIBaseURLOverrideKey = "WMFMediaWikiAPIBaseURLOverride"
+
     static func mediaWikiAPIURL(project: WMFProject) -> URL? {
         
         guard let siteURL = project.siteURL,
@@ -20,7 +25,14 @@ extension URL {
         }
         
         components.path = baseMediaWikiAPIPathComponents
-        
+
+        if let override = UserDefaults.standard.string(forKey: mediaWikiAPIBaseURLOverrideKey),
+           let overrideComponents = URLComponents(string: override) {
+            components.scheme = overrideComponents.scheme
+            components.host = overrideComponents.host
+            components.port = overrideComponents.port
+        }
+
         return components.url
     }
     

@@ -77,6 +77,7 @@ final class WMFHybridSearchDataControllerTests: XCTestCase {
     func testIsLanguageSupportedDefaults() {
         XCTAssertTrue(controller.isLanguageSupported("el"))
         XCTAssertTrue(controller.isLanguageSupported("EL"))
+        XCTAssertTrue(controller.isLanguageSupported("fr"))
         XCTAssertFalse(controller.isLanguageSupported("en"))
         XCTAssertFalse(controller.isLanguageSupported(nil))
     }
@@ -150,5 +151,60 @@ final class WMFHybridSearchDataControllerTests: XCTestCase {
         XCTAssertEqual(result.sectionIndex, 2)
         XCTAssertEqual(result.url, "https://el.wikipedia.org/wiki/Greek_mythology")
         XCTAssertEqual(result.processedSnippetHTML, "The <b>gods</b> of <i>Olympus</i> ")
+    }
+
+    // MARK: - MediaWiki full-text semantic response (6240fa0d02)
+
+    func testMediaWikiFullTextSearchResponseDecoding() throws {
+        let json = """
+        {
+            "batchcomplete": true,
+            "query": {
+                "pages": [
+                    {
+                        "pageid": 2,
+                        "ns": 0,
+                        "title": "Dwarf planet",
+                        "index": 2,
+                        "description": "Small planetary-mass object",
+                        "snippet": "A <b>dwarf planet</b> orbits the Sun."
+                    },
+                    {
+                        "pageid": 1,
+                        "ns": 0,
+                        "title": "Pluto",
+                        "index": 1,
+                        "description": "Dwarf planet",
+                        "snippet": "Pluto was reclassified as a <i>dwarf planet</i>.",
+                        "sectiontitle": "IAU classification",
+                        "thumbnail": {
+                            "source": "https://upload.wikimedia.org/pluto.jpg",
+                            "width": 320,
+                            "height": 320
+                        }
+                    }
+                ]
+            }
+        }
+        """
+
+        let response = try JSONDecoder().decode(WMFMediaWikiFullTextSearchResponse.self, from: Data(json.utf8))
+        let pages = try XCTUnwrap(response.query?.pages)
+        XCTAssertEqual(pages.count, 2)
+        XCTAssertEqual(pages[1].title, "Pluto")
+        XCTAssertEqual(pages[1].sectiontitle, "IAU classification")
+        XCTAssertEqual(pages[1].thumbnail?.source, "https://upload.wikimedia.org/pluto.jpg")
+        XCTAssertNil(pages[0].sectiontitle)
+    }
+
+    func testFullTextSearchResultFragmentAddsUnderscores() {
+        let result = WMFSemanticFullTextSearchResults.Result(title: "Pluto", snippetHTML: "", sectionTitle: "IAU classification", description: nil, thumbnailURL: nil)
+        XCTAssertEqual(result.fragment, "IAU_classification")
+
+        let noSection = WMFSemanticFullTextSearchResults.Result(title: "Pluto", snippetHTML: "", sectionTitle: nil, description: nil, thumbnailURL: nil)
+        XCTAssertNil(noSection.fragment)
+
+        let emptySection = WMFSemanticFullTextSearchResults.Result(title: "Pluto", snippetHTML: "", sectionTitle: "", description: nil, thumbnailURL: nil)
+        XCTAssertNil(emptySection.fragment)
     }
 }
