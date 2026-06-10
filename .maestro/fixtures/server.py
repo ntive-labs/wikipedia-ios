@@ -16,8 +16,10 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8081
 FIXTURE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # (url substring, fixture file) — first match wins.
+# ONTHISDAY_FIXTURE selects the On This Day events fixture (e.g. the
+# insufficient-events scenario for the WikiGames pairing-fallback flow).
 ROUTES = [
-    ("onthisday", "onthisday_events.json"),
+    ("onthisday", os.environ.get("ONTHISDAY_FIXTURE", "onthisday_events.json")),
     ("include_text=", "semantic_search_results.json"),
     ("feed/configuration", "remote_config.json"),
     ("generator=prefixsearch", "search_results.json"),
