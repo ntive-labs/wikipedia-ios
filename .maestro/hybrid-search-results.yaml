@@ -1,0 +1,45 @@
+appId: org.wikimedia.wikipedia
+name: Hybrid search results, semantic-first group (experiment group C)
+tags:
+  - mock
+  - hybrid-search
+---
+# Prerequisites (handled by run-hybrid-search.sh):
+#   - fixture server on localhost:8081 (semantic API route)
+# Persistent onboarded/opted-in state is reached by walking through the
+# onboarding (Get started) since those flags are Data-encoded in defaults.
+- launchApp:
+    clearState: true
+    arguments:
+      "-DidShowOnboarding5.3": "YES"
+      "-WMFHideTipsForTesting": "YES"
+      "-WMFSuppressActivityTabOnboardingForTesting": "YES"
+      "-WMFSuppressGamesAnnouncementForTesting": "YES"
+      "-WMFSuppressReadingChallengeAnnouncementForTesting": "YES"
+      "-WMFHybridSearchBucketOverride": "semanticLexical"
+      "-WMFHybridSearchSupportedLanguagesOverride": "en"
+      "-WMFSemanticSearchBaseURL": "http://localhost:8081/"
+- tapOn: "Search"
+- assertVisible: "A new way to search"
+- tapOn: "Get started"
+# Experiment-group placeholder replaces "Search Wikipedia".
+- assertVisible: "Search or ask anything"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-search-hint
+- inputText: "When was Pluto unlisted as a planet?"
+# Typing shows the title-only suggestion list; for this long question the
+# "Search for:" bottom row is the deterministic element.
+- extendedWaitUntil:
+    visible: "Search for:.*"
+    timeout: 10000
+- takeScreenshot: .maestro/screenshots/ios-hybrid-title-only-suggestions
+- pressKey: Enter
+# Group C = semantic cards first, lexical results below.
+- extendedWaitUntil:
+    visible: "Sourced from human generated Wikipedia articles"
+    timeout: 20000
+- assertVisible: "Rate this result"
+- assertVisible: "Pluto"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-results-semantic-first
+- tapOn: "Rate thumbs up"
+- assertVisible: "Rated"
+- takeScreenshot: .maestro/screenshots/ios-hybrid-results-rated

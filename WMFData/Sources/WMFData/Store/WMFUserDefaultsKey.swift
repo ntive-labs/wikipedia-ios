@@ -68,6 +68,10 @@ public enum WMFUserDefaultsKey: String {
     // Games dev settings
     case developerSettingsShowGamesV2 = "dev-settings-show-games-v2"
     
+    // Hybrid search experiment
+    case hybridSearchOnboardingShown = "hybrid-search-onboarding-shown"
+    case hybridSearchEnabled = "hybrid-search-enabled"
+
     // Logging
     case appInstallID = "wmf-app-install-id"
     case sessionID = "wmf-session-id"
