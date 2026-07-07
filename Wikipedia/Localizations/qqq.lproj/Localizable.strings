@@ -243,6 +243,17 @@
 "collect-prize-headline" = "Headline for collect prize modal";
 "collect-prize-subtitle" = "Subtitle for collect prize modal. Please leave %% unchanged for proper formatting.";
 "collect-prize-title" = "Title for collect prize modal sheet and button";
+"commons-caption-add-title" = "Title for the screen where a user adds a caption to a Commons image.";
+"commons-caption-edit-title" = "Title for the screen where a user edits an existing caption on a Commons image.";
+"commons-caption-length-warning" = "Displays how many caption characters were entered. $1 is the number of characters entered, $2 is the maximum recommended number.";
+"commons-caption-license" = "Text informing the user that publishing a caption releases it under the CC0 license.";
+"commons-caption-login-attribution" = "Attribution notice shown to logged-out users in the caption editor, encouraging them to log in.";
+"commons-caption-placeholder" = "Placeholder text shown in the caption text field before the user types.";
+"commons-caption-publish" = "Title for the button that publishes a Commons image caption.";
+"commons-caption-published" = "Toast shown after a Commons image caption is successfully published.";
+"commons-caption-subtitle" = "Subtitle describing which file and language a caption is being written for. $1 is replaced with the file name, $2 with the language name.";
+"commons-caption-too-long" = "Warning reminding the user to keep captions short.";
+"commons-caption-translate-title" = "Title for the screen where a user translates a caption on a Commons image into another language.";
 "compass-direction" = "Spoken description of compass direction, e.g. \"at 3 o'clock\" means \"to the right\", \"at 11 o'clock\" means \"slightly to the left\", etc. $1 is the hour.";
 "confirm-donation-history-deletion-subtitle" = "Subtitle for confirm local donation history deletion alert";
 "confirm-donation-history-deletion-title" = "Title for confirm local donation history deletion alert";
@@ -675,6 +686,7 @@
 "icon-shortcut-nearby-title" = "Title for app icon force touch shortcut to quickly open the nearby articles interface.";
 "icon-shortcut-random-title" = "Title for app icon force touch shortcut to quickly open a random article. {{Identical|Random article}}";
 "icon-shortcut-search-title" = "Title for app icon force touch shortcut to quickly open the search interface.";
+"image-gallery-add-caption" = "Accessibility label and title for the button that opens the Commons image caption editor.";
 "image-gallery-unknown-owner" = "Fallback text for when an item in the image gallery doesn't have a specified owner.";
 "image-rec-add-image-title" = "title for the add image suggestion view";
 "image-rec-empty-subtitle" = "Subtitle of empty view displayed when there are no more image recommendations.";
@@ -1586,6 +1598,7 @@
 "wikitext-upload-save-anonymously-warning" = "Button sub-text informing user or draw-backs of not signing in before saving wikitext. Parameters:\n* $1 - sign in button text";
 "wikitext-upload-save-terms-and-licenses-ccsa4" = "Text for information about the Terms of Use and edit licenses. Parameters:\n* $1 - app-specific non-text formatting, $2 - app-specific non-text formatting, $3 - app-specific non-text formatting, $4 - app-specific non-text formatting, $5 - app-specific non-text formatting,  $6 - app-specific non-text formatting.";
 "wikitext-upload-save-terms-name" = "This message is used in the message [[Wikimedia:Wikipedia-ios-wikitext-upload-save-terms-and-license]].";
+"wmf-localizations-tests-nonexistent-key" = "No comment provided by engineer.";
 "year-in-review-articles-slide-subtitle" = "Year in review articles slide subtitle, $1 is the list of top articles.";
 "year-in-review-base-editors-subtitle" = "Year in review, collective edits count slide subtitle.";
 "year-in-review-base-editors-title-updated" = "Year in review, collective edits count slide title, $1 is replaced with the number of edits made on apps, shown in numeric form (e.g. 124,356).";

@@ -1,0 +1,121 @@
+appId: org.wikimedia.wikipedia
+---
+# iOS — Commons image caption editing (Plan #2)
+#
+# Exercises the NEW capability added by this plan: structured Commons image-caption editing.
+# Before this change, iOS could only *display* a read-only gallery caption sourced from
+# extmetadata.ImageDescription; there was no way to write a MediaInfo `label` (caption) to
+# Commons. This flow reaches the image gallery and opens the new caption editor that publishes
+# a caption via the Commons `action=wbsetlabel` API (tagged `app-image-caption-add`), mirroring
+# Android's gallery caption flow (GalleryActivity.startCaptionEdit).
+#
+# What was added (verified in ./ios source):
+#   * WMFCommonsMediaInfoDataController (WMFData) — wbsetlabel write + wbgetentities read.
+#   * WMFCommonsCaptionEditViewController / ViewModel (WMFComponents) — the caption editor.
+#   * A pencil "Add caption" affordance in WMFImageGalleryDetailOverlayView, wired in
+#     WMFImageGalleryViewController.captionViewForPhoto ->
+#     WMFImageGalleryViewController.wmf_presentCommonsCaptionEditor(for:).
+#
+# Selectors:
+#   * Gallery caption button accessibility label = "Add caption" (localized key
+#     "image-gallery-add-caption").
+#   * Caption editor text view accessibilityIdentifier = "commons-caption-edit-text-view".
+#   * Caption editor publish button accessibilityIdentifier = "commons-caption-edit-publish-button".
+#
+# NOTE: The flow intentionally stops before publishing so it does not perform a real Commons
+# edit / require an authenticated account. Screenshots are written to ios/.maestro/artifacts/.
+
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Defensive dismissal of any first-run / promo / account overlays.
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Maybe later"
+    optional: true
+# Dismiss the persisted-session login verification sheet if it appears (Cancel = close button).
+- tapOn:
+    text: "Cancel"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 1500
+# Dismiss the "You have been logged out" prompt and continue as a reader.
+- tapOn:
+    text: "Continue without logging in"
+    optional: true
+- tapOn:
+    id: "xmark.circle.fill"
+    optional: true
+- tapOn:
+    id: "PopoverDismissRegion"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# --- Reach the feature: Search -> Albert Einstein ---
+- tapOn:
+    id: "magnifyingglass"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "Search Field"
+- inputText: "Albert Einstein"
+- extendedWaitUntil:
+    visible:
+      id: "Search Result Albert Einstein"
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 1500
+- tapOn:
+    id: "Search Result Albert Einstein"
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    id: "xmark.circle.fill"
+    optional: true
+
+# --- Open the image gallery from the article lead image ---
+- extendedWaitUntil:
+    visible:
+      id: "Article Lead Image"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "Article Lead Image"
+- extendedWaitUntil:
+    visible:
+      id: "Image Gallery View"
+    timeout: 12000
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible:
+    text: "Add caption"
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/ios_caption_01_gallery_with_add_caption_cta
+
+# --- Open the new Commons caption editor ---
+- tapOn:
+    text: "Add caption"
+- extendedWaitUntil:
+    visible:
+      id: "commons-caption-edit-text-view"
+    timeout: 12000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/ios_caption_02_caption_editor_opened
+
+# --- Type a caption to show validation enabling the Publish button ---
+- tapOn:
+    id: "commons-caption-edit-text-view"
+- inputText: "Albert Einstein in 1921"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/ios_caption_03_caption_typed
+- assertVisible:
+    id: "commons-caption-edit-publish-button"

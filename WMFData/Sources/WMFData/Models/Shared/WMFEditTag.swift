@@ -8,6 +8,8 @@ public enum WMFEditTag: String {
     case appRollback = "app-rollback"
     case appDescriptionAdd = "app-description-add"
     case appDescriptionChange = "app-description-change"
+    case appImageCaptionAdd = "app-image-caption-add"
+    case appImageCaptionTranslate = "app-image-caption-translate"
     case appSectionSource = "app-section-source"
     case appFullSource = "app-full-source"
     case appSelectSource = "app-select-source"
