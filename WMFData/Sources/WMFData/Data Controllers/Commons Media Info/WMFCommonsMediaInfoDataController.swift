@@ -221,6 +221,51 @@ public final class WMFCommonsMediaInfoDataController {
         return Self.depictsTags(ids: ids, from: termsResponse)
     }
 
+    // MARK: - Basic Image Info (completion-based, for legacy Obj-C entry points)
+
+    /// A lightweight subset of image info needed to launch the depicts editor from the Obj-C gallery:
+    /// the MediaInfo `pageID` (for `M<pageID>`), whether the file is Commons-native, and a thumb URL.
+    public struct BasicImageInfo: Sendable {
+        public let pageID: Int
+        public let isFromCommons: Bool
+        public let thumbURL: URL?
+    }
+
+    /// Completion-based basic image-info fetch used by the Objective-C gallery bridge, which cannot
+    /// easily call `async` Swift. Mirrors the completion style of ``fetchCaptions(fileTitle:languageCode:completion:)``.
+    public func fetchBasicImageInfo(fileTitle: String, pageLanguageCode: String, completion: @escaping (Result<BasicImageInfo, Error>) -> Void) {
+
+        guard let service else {
+            completion(.failure(WMFCommonsMediaInfoError.mediaWikiServiceUnavailable))
+            return
+        }
+        guard let url = URL.mediaWikiAPIURL(project: commonsProject) else {
+            completion(.failure(WMFCommonsMediaInfoError.failureCreatingRequestURL))
+            return
+        }
+
+        let parameters = Self.imageInfoParameters(fileTitle: fileTitle, metadataLanguage: pageLanguageCode, entityLanguage: Self.uselang(for: pageLanguageCode))
+        let request = WMFMediaWikiServiceRequest(url: url, method: .GET, backend: .mediaWiki, parameters: parameters)
+
+        service.performDecodableGET(request: request) { (result: Result<ImageInfoResponse, Error>) in
+            switch result {
+            case .success(let response):
+                guard let firstPage = response.query?.firstPage, firstPage.imageinfo?.first != nil else {
+                    completion(.failure(WMFCommonsMediaInfoError.noImageInfo))
+                    return
+                }
+                let info = BasicImageInfo(
+                    pageID: firstPage.pageid ?? 0,
+                    isFromCommons: !firstPage.isImageShared,
+                    thumbURL: firstPage.imageinfo?.first?.thumburl.flatMap { URL(string: $0) }
+                )
+                completion(.success(info))
+            case .failure(let error):
+                completion(.failure(WMFCommonsMediaInfoError.serviceError(error)))
+            }
+        }
+    }
+
     // MARK: - Read Captions (parity: getEntitiesByTitleSuspend)
 
     /// Fetches the existing MediaInfo caption labels for a Commons file.

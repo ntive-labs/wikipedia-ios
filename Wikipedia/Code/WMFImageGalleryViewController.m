@@ -307,6 +307,20 @@ NS_ASSUME_NONNULL_BEGIN
                                      }];
         }
     };
+    // Offer structured Commons caption + depicts-tag editing when we can resolve the file's canonical title.
+    if (imageInfo.canonicalPageTitle) {
+        caption.captionEditButtonTitle = WMFLocalizedStringWithDefaultValue(@"image-gallery-add-caption", nil, nil, @"Add caption", @"Accessibility label and title for the button that opens the Commons image caption editor.");
+        caption.captionEditTapCallback = ^{
+            @strongify(self);
+            [self wmf_presentCommonsCaptionEditorForImageInfo:imageInfo];
+        };
+        caption.tagsEditButtonTitle = WMFLocalizedStringWithDefaultValue(@"image-gallery-add-image-tags", nil, nil, @"Add image tags", @"Accessibility label and title for the button that opens the Commons image tags (depicts) editor.");
+        caption.tagsEditTapCallback = ^{
+            @strongify(self);
+            [self wmf_presentCommonsTagsEditorForImageInfo:imageInfo];
+        };
+    }
+
     // Use the screen bounds height as a reliable fallback since self.view may not
     // have been laid out yet when this delegate method is called.
     CGFloat fallback = self.view.window ? self.view.frame.size.height : UIScreen.mainScreen.bounds.size.height;
