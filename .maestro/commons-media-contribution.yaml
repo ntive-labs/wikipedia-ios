@@ -1,0 +1,113 @@
+appId: org.wikimedia.wikipedia
+---
+# iOS — Commons depicts-tag contribution prompt (plan #3)
+#
+# Exercises the iOS port of Android's Commons "add image tags" (depicts / P180) flow.
+# The gallery detail overlay shows an "Add image tags" (tag) affordance for eligible Commons
+# files. Tapping it opens a native editor that resolves the file's MediaInfo entity
+# (M<pageID>) from the live Commons API, lets the user search Wikidata items
+# (wbsearchentities) and add them as depicts chips, then publish via wbeditentity.
+#
+# Publishing requires authentication and is intentionally not performed here; the flow
+# captures the contribution prompt, editor, live Wikidata search, and selected-chip state.
+
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Maybe later"
+    optional: true
+- tapOn:
+    id: "xmark.circle.fill"
+    optional: true
+- tapOn:
+    id: "PopoverDismissRegion"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# --- Search -> Albert Einstein -> article ---
+- tapOn:
+    id: "magnifyingglass"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "Search Field"
+- inputText: "Albert Einstein"
+- extendedWaitUntil:
+    visible:
+      id: "Search Result Albert Einstein"
+    timeout: 15000
+- tapOn:
+    id: "Search Result Albert Einstein"
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    id: "xmark.circle.fill"
+    optional: true
+
+# --- Open the Image Gallery via the article lead image ---
+- extendedWaitUntil:
+    visible:
+      id: "Article Lead Image"
+    timeout: 20000
+- tapOn:
+    id: "Article Lead Image"
+- extendedWaitUntil:
+    visible:
+      id: "Image Gallery View"
+    timeout: 12000
+- waitForAnimationToEnd:
+    timeout: 2500
+
+# The gallery detail overlay shows the two Commons contribution affordances (tag + pencil).
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/plan-3-ios-01-gallery-affordances
+
+# --- Add image tags (depicts) editor ---
+- tapOn:
+    text: "Add image tags"
+- extendedWaitUntil:
+    visible:
+      id: "commons-tags-edit-publish-button"
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/plan-3-ios-02-tags-editor
+
+# Open the Wikidata item search sheet and search for an object.
+- tapOn:
+    id: "commons-tags-edit-add-button"
+- extendedWaitUntil:
+    visible:
+      id: "commons-tag-search-bar"
+    timeout: 8000
+- tapOn:
+    id: "commons-tag-search-bar"
+- inputText: "physicist"
+- extendedWaitUntil:
+    visible:
+      id: "commons-tag-search-result-cell"
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/plan-3-ios-03-tags-search
+
+# Select the first search result to add it as a depicts chip.
+- tapOn:
+    id: "commons-tag-search-result-cell"
+- waitForAnimationToEnd:
+    timeout: 1500
+# Close the search sheet (system Cancel/X) to return to the tags editor with the chip.
+- tapOn:
+    text: "Cancel"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/plan-3-ios-04-tags-selected

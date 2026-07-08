@@ -1,0 +1,79 @@
+appId: org.wikimedia.wikipedia
+---
+# iOS — Commons caption contribution prompt (plan #3)
+#
+# Exercises the iOS port of Android's Commons "add caption" (MediaInfo label / wbsetlabel)
+# flow. The gallery detail overlay shows an "Add caption" (pencil) affordance for eligible
+# Commons files, opening a native editor with a CC0 license notice and publish button.
+#
+# Publishing requires authentication and is intentionally not performed here; the flow
+# captures the contribution prompt and native editor.
+
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Maybe later"
+    optional: true
+- tapOn:
+    id: "xmark.circle.fill"
+    optional: true
+- tapOn:
+    id: "PopoverDismissRegion"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# --- Search -> Albert Einstein -> article ---
+- tapOn:
+    id: "magnifyingglass"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "Search Field"
+- inputText: "Albert Einstein"
+- extendedWaitUntil:
+    visible:
+      id: "Search Result Albert Einstein"
+    timeout: 15000
+- tapOn:
+    id: "Search Result Albert Einstein"
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    id: "xmark.circle.fill"
+    optional: true
+
+# --- Open the Image Gallery via the article lead image ---
+- extendedWaitUntil:
+    visible:
+      id: "Article Lead Image"
+    timeout: 20000
+- tapOn:
+    id: "Article Lead Image"
+- extendedWaitUntil:
+    visible:
+      id: "Image Gallery View"
+    timeout: 12000
+- waitForAnimationToEnd:
+    timeout: 2500
+
+# --- Add caption editor ---
+- tapOn:
+    text: "Add caption"
+- extendedWaitUntil:
+    visible:
+      id: "commons-caption-edit-text-view"
+    timeout: 12000
+- waitForAnimationToEnd:
+    timeout: 1500
+- tapOn:
+    id: "commons-caption-edit-text-view"
+- inputText: "Studio portrait of the physicist, 1947"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot:
+    path: /Users/kevingalligan/.portive/sync/checkouts/team-1/ios/.maestro/artifacts/plan-3-ios-05-caption-editor

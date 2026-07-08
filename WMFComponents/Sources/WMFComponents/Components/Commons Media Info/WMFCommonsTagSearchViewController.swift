@@ -144,6 +144,7 @@ public final class WMFCommonsTagSearchViewController: WMFComponentViewController
         cell.backgroundColor = theme.paperBackground
         cell.accessoryType = isAlreadySelected(tag) ? .checkmark : .none
         cell.selectionStyle = .default
+        cell.accessibilityIdentifier = "commons-tag-search-result-cell"
         return cell
     }
 
