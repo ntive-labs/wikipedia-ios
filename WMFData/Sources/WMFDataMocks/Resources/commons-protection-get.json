@@ -1,0 +1,18 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "userinfo": {
+      "id": 42,
+      "name": "ExampleEditor",
+      "groups": ["*", "user", "autoconfirmed"]
+    },
+    "pages": [
+      {
+        "pageid": 12345,
+        "ns": 6,
+        "title": "File:Example cat.jpg",
+        "protection": []
+      }
+    ]
+  }
+}

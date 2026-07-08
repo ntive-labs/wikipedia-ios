@@ -1,0 +1,34 @@
+{
+  "claims": {
+    "P180": [
+      {
+        "mainsnak": {
+          "snaktype": "value",
+          "property": "P180",
+          "datavalue": {
+            "value": { "entity-type": "item", "id": "Q146", "numeric-id": 146 },
+            "type": "wikibase-entityid"
+          },
+          "datatype": "wikibase-item"
+        },
+        "type": "statement",
+        "id": "M12345$abc-123",
+        "rank": "normal"
+      },
+      {
+        "mainsnak": {
+          "snaktype": "value",
+          "property": "P180",
+          "datavalue": {
+            "value": { "entity-type": "item", "id": "Q42320", "numeric-id": 42320 },
+            "type": "wikibase-entityid"
+          },
+          "datatype": "wikibase-item"
+        },
+        "type": "statement",
+        "id": "M12345$def-456",
+        "rank": "normal"
+      }
+    ]
+  }
+}

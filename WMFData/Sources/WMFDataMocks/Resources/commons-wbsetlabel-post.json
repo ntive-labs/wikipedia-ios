@@ -1,0 +1,11 @@
+{
+  "entity": {
+    "type": "mediainfo",
+    "id": "M12345",
+    "lastrevid": 987654,
+    "labels": {
+      "en": { "language": "en", "value": "A domestic cat on a garden wall" }
+    }
+  },
+  "success": 1
+}

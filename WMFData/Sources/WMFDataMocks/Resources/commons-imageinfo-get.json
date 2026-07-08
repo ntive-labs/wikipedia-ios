@@ -1,0 +1,36 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "pages": [
+      {
+        "pageid": 12345,
+        "ns": 6,
+        "title": "File:Example cat.jpg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "timestamp": "2021-05-01T12:00:00Z",
+            "user": "ExampleUploader",
+            "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Example_cat.jpg/330px-Example_cat.jpg",
+            "thumbwidth": 330,
+            "thumbheight": 220,
+            "url": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Example_cat.jpg",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Example_cat.jpg",
+            "mime": "image/jpeg",
+            "extmetadata": {
+              "ImageDescription": { "value": "A cat sitting on a wall", "source": "commons-desc-page" },
+              "Artist": { "value": "Jane Photographer", "source": "commons-desc-page" },
+              "DateTimeOriginal": { "value": "2021-04-30", "source": "commons-desc-page" },
+              "Credit": { "value": "Own work", "source": "commons-desc-page" },
+              "LicenseShortName": { "value": "CC BY-SA 4.0", "source": "commons-desc-page" },
+              "LicenseUrl": { "value": "https://creativecommons.org/licenses/by-sa/4.0", "source": "commons-desc-page" }
+            }
+          }
+        ],
+        "entityterms": {
+          "label": ["A domestic cat on a garden wall"]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "pages": [
+      {
+        "pageid": 289,
+        "ns": 0,
+        "title": "Q146",
+        "entityterms": {
+          "label": ["domestic cat"],
+          "description": ["domesticated feline"]
+        }
+      },
+      {
+        "pageid": 42999,
+        "ns": 0,
+        "title": "Q42320",
+        "entityterms": {
+          "label": ["wall"],
+          "description": ["structure that defines an area"]
+        }
+      }
+    ]
+  }
+}

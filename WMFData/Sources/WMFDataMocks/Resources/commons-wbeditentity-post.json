@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "type": "mediainfo",
+    "id": "M12345",
+    "lastrevid": 987700,
+    "claims": {
+      "P180": [
+        {
+          "mainsnak": {
+            "snaktype": "value",
+            "property": "P180",
+            "datavalue": { "value": { "entity-type": "item", "id": "Q146" }, "type": "wikibase-entityid" }
+          },
+          "type": "statement",
+          "rank": "normal"
+        }
+      ]
+    }
+  },
+  "success": 1
+}

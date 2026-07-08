@@ -1,0 +1,18 @@
+{
+  "searchinfo": { "search": "cat" },
+  "search": [
+    {
+      "id": "Q146",
+      "title": "Q146",
+      "label": "house cat",
+      "description": "domesticated species of feline"
+    },
+    {
+      "id": "Q20980826",
+      "title": "Q20980826",
+      "label": "Cat",
+      "description": "album by the band"
+    }
+  ],
+  "success": 1
+}
