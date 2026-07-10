@@ -56,6 +56,11 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         }
     }
 
+    /// Controls whether local sources (open tabs, reading history, saved pages) are merged into
+    /// standard search results. Hosts that should stay remote-only (e.g. the insert-link flow) set
+    /// this to `false`, matching Android's `InvokeSource.PLACES` skip in `StandardSearchRepository`.
+    var showsLocalResults: Bool = true
+
     // MARK: - Private properties
 
     private let source: EventLoggingSource
@@ -86,6 +91,7 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
     private var lastSearchSiteURL: URL?
     private var _siteURL: URL?
     private var searchTask: Task<Void, Never>?
+    private let localSearchProvider = WMFLocalSearchProvider()
 
     var siteURL: URL? {
         get {
@@ -300,6 +306,15 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         resetSearchResults()
         let start = Date()
 
+        // Gather local matches (open tabs, reading history, saved pages) scoped to the selected wiki,
+        // concurrently with the remote fetch so they never delay remote results — mirrors Android's
+        // `StandardSearchRepository` `awaitAll` of its local sources. The task short-circuits when the
+        // host opted out (e.g. insert-link) so remote-only flows are unaffected.
+        let localResultsTask = Task { @MainActor [weak self] () -> [MWKSearchResult] in
+            guard let self, self.showsLocalResults else { return [] }
+            return await self.localSearchProvider.localResults(for: searchTerm, siteURL: siteURL, dataStore: self.dataStore)
+        }
+
         let failure = { (error: Error, type: WMFSearchType) in
             DispatchQueue.main.async { [weak self] in
                 guard let self,
@@ -311,16 +326,18 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
         }
 
         let success = { (results: WMFSearchResults, type: WMFSearchType) in
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
+            Task { @MainActor [weak self] in
+                guard let self,
+                      searchTerm == self.searchTerm else { return }
+                let localResults = await localResultsTask.value
                 NSUserActivity.wmf_makeActive(NSUserActivity.wmf_searchResultsActivitySearchSiteURL(siteURL, searchTerm: searchTerm))
-                let resultsArray = results.results ?? []
-                self.resultsViewController.emptyViewType = resultsArray.isEmpty ? .noSearchResults : .none
+                let mergedResults = Self.mergeLocalResults(localResults, withRemoteResults: results.results ?? [])
+                self.resultsViewController.emptyViewType = mergedResults.isEmpty ? .noSearchResults : .none
                 self.resultsViewController.resultsInfo = results
                 self.resultsViewController.searchSiteURL = siteURL
-                self.resultsViewController.results = resultsArray
+                self.resultsViewController.results = mergedResults
                 guard !suggested else { return }
-                SearchFunnel.shared.logSearchResults(with: type, resultCount: resultsArray.count, elapsedTime: Date().timeIntervalSince(start), source: self.source.stringValue)
+                SearchFunnel.shared.logSearchResults(with: type, resultCount: mergedResults.count, elapsedTime: Date().timeIntervalSince(start), source: self.source.stringValue)
             }
         }
 
@@ -347,6 +364,32 @@ class SearchResultsViewController: ThemeableViewController, WMFNavigationBarConf
                 success(fullTextResults, .full)
             })
         })
+    }
+
+    /// Prepends local results ahead of remote results and de-duplicates by normalized title, keeping
+    /// the first occurrence. Mirrors Android's `resultList.distinctBy { it.pageTitle.prefixedText }`
+    /// after the local sources are prepended to the remote prefix/full-text results.
+    private static func mergeLocalResults(_ localResults: [MWKSearchResult], withRemoteResults remoteResults: [MWKSearchResult]) -> [MWKSearchResult] {
+        guard !localResults.isEmpty else { return remoteResults }
+
+        var seenKeys = Set<String>()
+        var merged: [MWKSearchResult] = []
+        merged.reserveCapacity(localResults.count + remoteResults.count)
+
+        for result in localResults + remoteResults {
+            let normalizedTitle = (result.title ?? result.displayTitle ?? "")
+                .replacingOccurrences(of: "_", with: " ")
+                .lowercased()
+            guard !normalizedTitle.isEmpty else {
+                merged.append(result)
+                continue
+            }
+            if seenKeys.insert(normalizedTitle).inserted {
+                merged.append(result)
+            }
+        }
+
+        return merged
     }
 
     private lazy var fetcher = WMFSearchFetcher()

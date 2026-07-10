@@ -45,7 +45,15 @@ class InsertLinkViewController: UIViewController, WMFNavigationBarConfiguring {
         let closeButtonConfig = WMFLargeCloseButtonConfig(imageType: .plainX, target: self, action: #selector(delegateCloseButtonTap(_:)), alignment: .leading)
 
         let searchResultsVC = SearchResultsViewController(source: .unknown, dataStore: dataStore)
+        // Scope search to the caller's article wiki. This assignment was dropped in the UISearchController
+        // refactor (83e072604e); without it search falls through to the app's primary/default wiki, so
+        // results — and the inserted link — could resolve on the wrong wiki. Mirrors Android, where each
+        // SearchResult's PageTitle is built with the caller's WikiSite.
+        searchResultsVC.siteURL = siteURL
         searchResultsVC.showLanguageBar = false
+        // Keep the insert-link surface remote-only (parity with Android's InvokeSource.PLACES skip and
+        // iOS commit 9a580adf0b "Do not display history in insert link flow").
+        searchResultsVC.showsLocalResults = false
         searchResultsVC.apply(theme: theme)
         searchResultsVC.populateSearchBarAction = { [weak self] searchTerm in
             self?.navigationItem.searchController?.searchBar.text = searchTerm

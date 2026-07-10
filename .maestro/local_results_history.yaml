@@ -1,0 +1,44 @@
+appId: org.wikimedia.wikipedia
+name: Local search results (open tab / reading history)
+# Exercises the P2 capability: after an article is viewed (adding it to reading history and opening a
+# tab on the EN wiki), standard search surfaces that article as a wiki-scoped local result, merged and
+# de-duplicated with the remote results - mirroring Android's StandardSearchRepository local sources.
+#
+# The proof: we view "Frank Zappa", then search the substring "Zappa". A remote *prefix* search for
+# "Zappa" returns titles that start with "Zappa" - it would not rank "Frank Zappa" first. So seeing
+# "Frank Zappa" at the top of the "Zappa" results demonstrates the local (tab/history) source.
+tags:
+  - search
+  - plan-5
+---
+- launchApp:
+    appId: org.wikimedia.wikipedia
+    clearState: true
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Maybe later"
+    optional: true
+# 1) View an article so it enters reading history and opens a tab on the EN wiki.
+- openLink: "wikipedia://search"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Search Wikipedia"
+- inputText: "Frank Zappa"
+- waitForAnimationToEnd
+- tapOn:
+    id: "Search Result Frank Zappa"
+- waitForAnimationToEnd
+- takeScreenshot: local_results_article_opened
+# 2) Return to standard search and query only the substring "Zappa"; the viewed article is surfaced
+#    at the top as a wiki-scoped local result (open tab + reading history), ahead of the remote hits.
+- openLink: "wikipedia://search"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Search Wikipedia"
+- inputText: "Zappa"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "Search Result Frank Zappa"
+- takeScreenshot: local_results_zappa
