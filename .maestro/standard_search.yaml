@@ -1,0 +1,31 @@
+appId: org.wikimedia.wikipedia
+name: Standard article search (wiki-scoped)
+# Exercises the shared standard-search surface (SearchViewController -> SearchResultsViewController)
+# that plan #5 hardens: results are scoped to the selected wiki (EN here). This is the same
+# SearchResultsViewController.siteURL scoping that the P0 insert-link fix restores for the editor flow.
+tags:
+  - search
+  - plan-5
+---
+- launchApp:
+    appId: org.wikimedia.wikipedia
+    clearState: true
+# Dismiss first-run onboarding / promos if present.
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "Maybe later"
+    optional: true
+# Enter standard search via the deep link used by the search widgets (wikipedia://search).
+- openLink: "wikipedia://search"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Search Wikipedia"
+- inputText: "Albert Einstein"
+- waitForAnimationToEnd
+# The language bar shows the scoped wiki, and results resolve on that wiki.
+- assertVisible: "English"
+- assertVisible:
+    id: "Search Result Albert Einstein"
+- takeScreenshot: standard_search_en
