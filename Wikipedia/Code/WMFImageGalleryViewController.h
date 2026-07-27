@@ -40,6 +40,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)galleryDidDismiss:(WMFImageGalleryViewController *)gallery;
 - (void)galleryDidTapInfoButton:(WMFImageGalleryViewController *)gallery;
 
+@optional
+/// Preferred native entry point for the info button: carries the currently displayed image info so the
+/// delegate can open the native Commons file media-info screen (caption + image tag contributions).
+/// When implemented, this takes precedence over the legacy web-view file page navigation.
+- (void)galleryDidTapInfoButton:(WMFImageGalleryViewController *)gallery imageInfo:(nullable MWKImageInfo *)imageInfo;
+
 @end
 
 /**

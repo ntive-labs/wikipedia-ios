@@ -14,4 +14,7 @@ public enum WMFEditTag: String {
     case appTalkSource = "app-talk-source"
     case appTalkReply = "app-talk-reply"
     case appTalkTopic = "app-talk-topic"
+    case appImageCaptionAdd = "app-image-caption-add"
+    case appImageCaptionTranslate = "app-image-caption-translate"
+    case appImageTagAdd = "app-image-tag-add"
 }

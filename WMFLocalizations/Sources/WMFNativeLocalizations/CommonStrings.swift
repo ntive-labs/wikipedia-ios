@@ -969,6 +969,64 @@ public extension CommonStrings {
 
     static let uzbekVariantsAlertBody = WMFLocalizedString("uzbek-variants-alert-body", value: "The Wikipedia app now supports the following Uzbek variants as primary or secondary languages within the app, making it easier to read, search and edit in your preferred variants:\n\noʻzbekcha lotin Uzbek, Latin (uz-latin)\nўзбекча кирилл Uzbek, Cyrillic (uz-cyrl)", comment: "Body text of alert used to inform users about Uzbek variant support. Please do not translate the newlines (\n) or Uzbek characters (ўзбекча кирилл, etc.).")
 
+    // MARK: - Commons media info (file caption + depicts tags contributions)
+
+    static let mediaInfoTitle = WMFLocalizedString("media-info-title", value: "File information", comment: "Navigation bar title for the Commons file media information screen.")
+
+    static let mediaInfoCaptionHeader = WMFLocalizedString("media-info-caption-header", value: "Caption", comment: "Section header for the structured caption of a Commons media file.")
+
+    static let mediaInfoAddCaptionButton = WMFLocalizedString("media-info-add-caption-button", value: "Add caption", comment: "Call-to-action button title to add a caption to a Commons media file.")
+
+    static let mediaInfoTranslateCaptionButton = WMFLocalizedString("media-info-translate-caption-button", value: "Translate caption", comment: "Call-to-action button title to translate an existing caption into the user's language.")
+
+    static let mediaInfoTagsHeader = WMFLocalizedString("media-info-tags-header", value: "Image tags", comment: "Section header for the depicts (image tags) of a Commons media file.")
+
+    static let mediaInfoAddTagsButton = WMFLocalizedString("media-info-add-tags-button", value: "Add image tags", comment: "Call-to-action button title to add depicts image tags to a Commons media file.")
+
+    static let mediaInfoAuthorHeader = WMFLocalizedString("media-info-author-header", value: "Author", comment: "Section header for the author of a Commons media file.")
+
+    static let mediaInfoDateHeader = WMFLocalizedString("media-info-date-header", value: "Date", comment: "Section header for the date of a Commons media file.")
+
+    static let mediaInfoLicenseHeader = WMFLocalizedString("media-info-license-header", value: "License", comment: "Section header for the license of a Commons media file.")
+
+    static let mediaInfoViewOnCommonsButton = WMFLocalizedString("media-info-view-on-commons-button", value: "View on Wikimedia Commons", comment: "Button title to open the file page for a media file on Wikimedia Commons in a web view.")
+
+    static let mediaInfoErrorTitle = WMFLocalizedString("media-info-error-title", value: "Unable to load file information", comment: "Error message shown when the Commons file media information fails to load.")
+
+    static let mediaInfoErrorRetryButton = WMFLocalizedString("media-info-error-retry-button", value: "Try again", comment: "Button title to retry loading the Commons file media information after an error.")
+
+    static let mediaInfoNoCaptionPlaceholder = WMFLocalizedString("media-info-no-caption-placeholder", value: "No caption yet", comment: "Placeholder shown when a Commons media file has no caption and the user cannot edit it.")
+
+    static let mediaInfoNoTagsPlaceholder = WMFLocalizedString("media-info-no-tags-placeholder", value: "No image tags yet", comment: "Placeholder shown when a Commons media file has no image tags and the user cannot edit it.")
+
+    static let mediaInfoCaptionEditorInstructions = WMFLocalizedString("media-info-caption-editor-instructions", value: "Describe what this file shows in a short caption.", comment: "Instructions displayed on the Commons caption editor screen.")
+
+    static let mediaInfoCaptionEditorPlaceholder = WMFLocalizedString("media-info-caption-editor-placeholder", value: "Add a caption", comment: "Placeholder text for the Commons caption text field.")
+
+    static let mediaInfoCaptionLicenseNotice = WMFLocalizedString("media-info-caption-license-notice", value: "By publishing, you agree to the terms of use, and to irrevocably release your contribution under a free license.", comment: "License notice shown on the Commons caption editor.")
+
+    static let mediaInfoTagsEditorInstructions = WMFLocalizedString("media-info-tags-editor-instructions", value: "Search for items that this file depicts and add them as image tags.", comment: "Instructions displayed on the Commons depicts image tags editor screen.")
+
+    static let mediaInfoTagsSearchPlaceholder = WMFLocalizedString("media-info-tags-search-placeholder", value: "Search for tags", comment: "Placeholder text for the depicts image tag search field.")
+
+    static let mediaInfoCC0Notice = WMFLocalizedString("media-info-cc0-notice", value: "By publishing image tags, you agree to release them under a Creative Commons CC0 license.", comment: "CC0 license notice shown on the Commons depicts image tags editor.")
+
+    static let mediaInfoPublishButton = WMFLocalizedString("media-info-publish-button", value: "Publish", comment: "Button title to publish a Commons caption or image tag edit.")
+
+    static let mediaInfoPublishingButton = WMFLocalizedString("media-info-publishing-button", value: "Publishing…", comment: "Button title shown while a Commons caption or image tag edit is being published.")
+
+    static let mediaInfoTagsExitTitle = WMFLocalizedString("media-info-tags-exit-title", value: "Discard tags?", comment: "Title of the confirmation dialog shown when leaving the image tags editor with unpublished tags.")
+
+    static let mediaInfoTagsExitMessage = WMFLocalizedString("media-info-tags-exit-message", value: "You have image tags that have not been published. Are you sure you want to discard them?", comment: "Message of the confirmation dialog shown when leaving the image tags editor with unpublished tags.")
+
+    static let mediaInfoTagsExitDiscard = WMFLocalizedString("media-info-tags-exit-discard", value: "Discard", comment: "Button title to discard unpublished image tags and leave the editor.")
+
+    static let mediaInfoTagsExitKeepEditing = WMFLocalizedString("media-info-tags-exit-keep-editing", value: "Keep editing", comment: "Button title to keep editing image tags rather than discarding them.")
+
+    static let mediaInfoCaptionPublishedToastTitle = WMFLocalizedString("media-info-caption-published-toast", value: "Caption published", comment: "Success message shown after a Commons caption is published.")
+
+    static let mediaInfoTagsPublishedToastTitle = WMFLocalizedString("media-info-tags-published-toast", value: "Image tags published", comment: "Success message shown after Commons image tags are published.")
+
     // Tachelhit
 
     static let tachelhitVariantsAlertTitle =  WMFLocalizedString("tachelhit-variants-alert-title", value: "Updates to Tachelhit variant support", comment: "Title of alert used to inform users about Tachelhit variant support.")

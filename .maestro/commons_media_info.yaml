@@ -1,0 +1,120 @@
+# Maestro flow: Commons media caption & image-tag contribution prompts (iOS port).
+#
+# Demonstrates parity with Android's FilePage: opening the native File Media Info screen
+# from the article image gallery's info button, showing the loaded Commons caption + depicts
+# image tags (read parity), the "Add caption" contribution CTA for a file missing a caption,
+# and the caption editor.
+#
+# Run: maestro test .maestro/commons_media_info.yaml
+appId: org.wikimedia.wikipedia
+name: Commons Media Info - caption & image tags
+tags:
+  - ios
+  - commons-media-info
+---
+- launchApp:
+    appId: org.wikimedia.wikipedia
+    clearState: false
+
+# Dismiss first-run onboarding / game promos if present.
+- runFlow:
+    when:
+      visible: "Skip"
+    commands:
+      - tapOn: "Skip"
+- runFlow:
+    when:
+      visible: "Maybe later"
+    commands:
+      - tapOn: "Maybe later"
+
+# Search for an article with a rich image gallery.
+- tapOn:
+    id: "magnifyingglass"
+- tapOn: "Search Wikipedia"
+- inputText: "Dog"
+- extendedWaitUntil:
+    visible:
+      id: "Search Result Dog"
+    timeout: 15000
+- tapOn:
+    id: "Search Result Dog"
+- extendedWaitUntil:
+    notVisible:
+      id: "Search Field"
+    timeout: 20000
+- waitForAnimationToEnd
+
+# Dismiss the "Tap to go back" tooltip if present.
+- runFlow:
+    when:
+      visible: "Tap to go back"
+    commands:
+      - tapOn:
+          point: "88%,20%"
+
+# --- Read parity: lead image already has a Commons caption + depicts tags ---
+- tapOn:
+    point: "50%,30%"
+- extendedWaitUntil:
+    visible:
+      id: "Image Gallery Image"
+    timeout: 10000
+- tapOn:
+    text: "info white"
+- extendedWaitUntil:
+    visible:
+      id: "file-media-info-scroll"
+    timeout: 15000
+- assertVisible:
+    id: "file-media-info-caption-value"
+- assertVisible:
+    id: "file-media-info-view-on-commons-button"
+- takeScreenshot: .maestro/screenshots/plan3-ios-01-media-info-read
+
+# --- Contribution CTA: an in-article file missing an English caption ---
+- tapOn:
+    point: "10%,10%"
+- extendedWaitUntil:
+    notVisible:
+      id: "file-media-info-scroll"
+    timeout: 8000
+- tapOn:
+    point: "50%,30%"
+- extendedWaitUntil:
+    visible:
+      id: "Image Gallery Image"
+    timeout: 10000
+- swipe:
+    direction: LEFT
+- swipe:
+    direction: LEFT
+- swipe:
+    direction: LEFT
+- swipe:
+    direction: LEFT
+- swipe:
+    direction: LEFT
+- tapOn:
+    text: "info white"
+- extendedWaitUntil:
+    visible:
+      id: "file-media-info-add-caption-button"
+    timeout: 15000
+- takeScreenshot: .maestro/screenshots/plan3-ios-02-add-caption-cta
+
+# --- Caption editor (add mode): terms/license notice + publish ---
+- tapOn:
+    id: "file-media-info-add-caption-button"
+- extendedWaitUntil:
+    visible:
+      id: "commons-caption-text-field"
+    timeout: 10000
+- tapOn:
+    id: "commons-caption-text-field"
+- inputText: "Lateral skeletal anatomy of a dog"
+- assertVisible:
+    id: "commons-caption-license-notice"
+- assertVisible:
+    id: "commons-caption-publish-button"
+- takeScreenshot: .maestro/screenshots/plan3-ios-03-caption-editor

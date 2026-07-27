@@ -109,8 +109,33 @@ extension ArticleViewController: WMFImageGalleryViewControllerDismissDelegate {
     func galleryDidDismiss(_ gallery: WMFImageGalleryViewController) {
 
     }
-    
+
     func galleryDidTapInfoButton(_ gallery: WMFImageGalleryViewController) {
 
+    }
+
+    /// Native entry point for the gallery info button: opens the Commons file media-info screen
+    /// (caption + image tag contributions). Falls back to the web-view file page when the file has no
+    /// resolvable Commons `File:` title.
+    func galleryDidTapInfoButton(_ gallery: WMFImageGalleryViewController, imageInfo: MWKImageInfo?) {
+        guard let imageInfo,
+              let commonsTitle = imageInfo.canonicalPageTitle,
+              let navigationController else {
+            if let url = imageInfo?.filePageURL {
+                navigate(to: url)
+            }
+            return
+        }
+
+        let languageCode = articleURL.wmf_languageCode ?? "en"
+        let coordinator = MediaFileInfoCoordinator(
+            navigationController: navigationController,
+            theme: theme,
+            dataStore: dataStore,
+            commonsTitle: commonsTitle,
+            languageCode: languageCode,
+            allowEdit: true
+        )
+        coordinator.start()
     }
 }
