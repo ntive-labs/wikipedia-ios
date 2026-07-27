@@ -1,0 +1,39 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "users": [
+      {
+        "userid": 501,
+        "name": "NewbieUser",
+        "editcount": 5,
+        "registration": "2026-07-25T00:00:00Z",
+        "groups": ["*", "user"],
+        "rights": ["read", "edit"]
+      },
+      {
+        "userid": 502,
+        "name": "ProfUser",
+        "editcount": 5000,
+        "registration": "2015-01-01T00:00:00Z",
+        "groups": ["*", "user", "autoconfirmed", "extendedconfirmed"],
+        "rights": ["read", "edit", "rollback"]
+      },
+      {
+        "userid": 503,
+        "name": "HelpfulBot",
+        "editcount": 200,
+        "registration": "2016-01-01T00:00:00Z",
+        "groups": ["*", "user", "bot"],
+        "rights": ["read", "edit", "bot"]
+      },
+      {
+        "userid": 504,
+        "name": "LearnerUser",
+        "editcount": 50,
+        "registration": "2020-01-01T00:00:00Z",
+        "groups": ["*", "user", "autoconfirmed"],
+        "rights": ["read", "edit"]
+      }
+    ]
+  }
+}

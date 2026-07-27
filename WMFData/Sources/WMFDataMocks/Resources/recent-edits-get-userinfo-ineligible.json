@@ -1,0 +1,13 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "userinfo": {
+      "id": 9002,
+      "name": "RegularUser",
+      "editcount": 42,
+      "registrationdate": "2024-01-01T00:00:00Z",
+      "groups": ["*", "user", "autoconfirmed"],
+      "rights": ["read", "edit"]
+    }
+  }
+}

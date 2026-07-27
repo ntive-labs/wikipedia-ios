@@ -1,0 +1,114 @@
+{
+  "batchcomplete": true,
+  "continue": {
+    "rccontinue": "20260726120000|1000",
+    "continue": "-||"
+  },
+  "query": {
+    "recentchanges": [
+      {
+        "type": "edit",
+        "ns": 0,
+        "title": "Anonymous Contribution",
+        "pageid": 101,
+        "revid": 1001,
+        "old_revid": 1000,
+        "rcid": 5001,
+        "user": "192.0.2.5",
+        "anon": true,
+        "oldlen": 5200,
+        "newlen": 5180,
+        "timestamp": "2026-07-27T11:05:00Z",
+        "comment": "removed a sentence",
+        "parsedcomment": "removed a sentence",
+        "tags": ["mobile edit", "mobile web edit"],
+        "oresscores": {
+          "damaging": { "true": 0.02, "false": 0.98 },
+          "goodfaith": { "true": 0.98, "false": 0.02 }
+        }
+      },
+      {
+        "type": "edit",
+        "ns": 0,
+        "title": "Newcomer Article",
+        "pageid": 102,
+        "revid": 1002,
+        "old_revid": 999,
+        "rcid": 5002,
+        "user": "NewbieUser",
+        "oldlen": 3000,
+        "newlen": 3120,
+        "timestamp": "2026-07-27T10:40:00Z",
+        "comment": "added detail",
+        "parsedcomment": "added detail",
+        "tags": [],
+        "oresscores": {
+          "damaging": { "true": 0.10, "false": 0.90 },
+          "goodfaith": { "true": 0.90, "false": 0.10 }
+        }
+      },
+      {
+        "type": "edit",
+        "ns": 0,
+        "title": "Physics",
+        "pageid": 103,
+        "revid": 1003,
+        "old_revid": 998,
+        "rcid": 5003,
+        "user": "ProfUser",
+        "oldlen": 90000,
+        "newlen": 89000,
+        "timestamp": "2026-07-27T10:15:00Z",
+        "comment": "trimmed unsourced material",
+        "parsedcomment": "trimmed unsourced material",
+        "tags": ["reverted"],
+        "oresscores": {
+          "damaging": { "true": 0.80, "false": 0.20 },
+          "goodfaith": { "true": 0.30, "false": 0.70 }
+        }
+      },
+      {
+        "type": "edit",
+        "ns": 0,
+        "title": "Bot Maintenance Page",
+        "pageid": 104,
+        "revid": 1004,
+        "old_revid": 997,
+        "rcid": 5004,
+        "user": "HelpfulBot",
+        "bot": true,
+        "minor": true,
+        "oldlen": 12000,
+        "newlen": 12005,
+        "timestamp": "2026-07-27T09:50:00Z",
+        "comment": "fixing links",
+        "parsedcomment": "fixing links",
+        "tags": [],
+        "oresscores": {
+          "damaging": { "true": 0.05, "false": 0.95 },
+          "goodfaith": { "true": 0.95, "false": 0.05 }
+        }
+      },
+      {
+        "type": "edit",
+        "ns": 0,
+        "title": "Learner Sandbox",
+        "pageid": 105,
+        "revid": 1005,
+        "old_revid": 996,
+        "rcid": 5005,
+        "user": "LearnerUser",
+        "oldlen": 800,
+        "newlen": 1400,
+        "timestamp": "2026-07-27T09:20:00Z",
+        "comment": "expanded stub",
+        "parsedcomment": "expanded stub",
+        "tags": ["visualeditor"],
+        "oresscores": {
+          "damaging": { "true": 0.30, "false": 0.70 },
+          "goodfaith": { "true": 0.70, "false": 0.30 }
+        }
+      }
+    ]
+  }
+}

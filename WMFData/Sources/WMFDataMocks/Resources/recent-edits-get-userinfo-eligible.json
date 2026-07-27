@@ -1,0 +1,13 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "userinfo": {
+      "id": 9001,
+      "name": "PatrollerUser",
+      "editcount": 6000,
+      "registrationdate": "2015-03-01T00:00:00Z",
+      "groups": ["*", "user", "autoconfirmed", "rollbacker"],
+      "rights": ["read", "edit", "rollback", "patrol"]
+    }
+  }
+}
