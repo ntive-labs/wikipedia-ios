@@ -1,0 +1,46 @@
+# Edit Patrol — iOS flow
+#
+# Exercises the Edit Patrol entry context on iOS and, once the Phase 3 app-side entry
+# is wired in, the new recent-edits feed + filter screens built in WMFComponents. The
+# feed exposes stable accessibilityIdentifiers that mirror the intended Android testTags
+# so the two flows stay parallel:
+#   edit-patrol-list, edit-patrol-search, edit-patrol-filter-button,
+#   edit-patrol-filter-list, edit-patrol-filter-row-<id>, edit-patrol-row-<rcid>
+#
+# Edit Patrol is gated behind a permanently logged-in, eligible (rollback/sysop)
+# patroller. Logged out, the Account screen shows the login prompt — this flow captures
+# that entry/gating context, which is what the plan's eligibility rule guarantees.
+#
+appId: org.wikimedia.wikipedia
+name: Edit Patrol (iOS)
+tags:
+  - edit-patrol
+---
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: plan-39-ios-01-explore
+
+# Open the account / profile — the entry point under which Suggested Edits (and the new
+# Edit Patrol task) is surfaced for eligible logged-in patrollers.
+- tapOn:
+    id: "profile-button"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: plan-39-ios-02-account-entry
+
+# Once the Phase 3 entry surfaces the feed, these steps drive the new UI directly.
+- runFlow:
+    when:
+      visible:
+        id: "edit-patrol-list"
+    commands:
+      - assertVisible:
+          id: "edit-patrol-search"
+      - takeScreenshot: plan-39-ios-03-recent-edits-feed
+      - tapOn:
+          id: "edit-patrol-filter-button"
+      - assertVisible:
+          id: "edit-patrol-filter-list"
+      - takeScreenshot: plan-39-ios-04-filters
