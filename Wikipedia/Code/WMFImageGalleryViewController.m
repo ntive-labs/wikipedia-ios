@@ -298,11 +298,18 @@ NS_ASSUME_NONNULL_BEGIN
             // First dismiss self
             [self dismissViewControllerAnimated:YES
                                      completion:^{
+                                         // Preferred: open the native Commons file media-info screen for
+                                         // eligible files (caption + image tag contributions).
+                                         if ([self.dismissDelegate respondsToSelector:@selector(galleryDidTapInfoButton:imageInfo:)]) {
+                                             [self.dismissDelegate galleryDidTapInfoButton:self imageInfo:imageInfo];
+                                             return;
+                                         }
+
                                          if ([self.dismissDelegate respondsToSelector:@selector(galleryDidTapInfoButton:)]) {
                                              [self.dismissDelegate galleryDidTapInfoButton:self];
                                          }
 
-                                         // then navigate to in-app web view
+                                         // Legacy fallback: navigate to the file page in an in-app web view
                                          [self wmf_navigateToURL:imageInfo.filePageURL.wmf_urlByPrependingSchemeIfSchemeless];
                                      }];
         }
