@@ -20,29 +20,38 @@ extension URL {
         }
         
         components.path = baseMediaWikiAPIPathComponents
-        
+
+        // Debug-only test seam: redirect to a mock server when an apiBaseUrl launch override is set.
+        WMFTestConfig.applyAPIBaseURLOverride(to: &components)
+
         return components.url
     }
-    
+
     static func wikimediaRestAPIURL(project: WMFProject, additionalPathComponents: [String]) -> URL? {
         guard let siteURL = project.siteURL,
         var components = URLComponents(url: siteURL, resolvingAgainstBaseURL: false) else {
             return nil
         }
-        
+
         components.path = baseWikimediaRestAPIPathComponents + additionalPathComponents.joined(separator: "/")
-        
+
+        // Debug-only test seam: redirect to a mock server when an apiBaseUrl launch override is set.
+        WMFTestConfig.applyAPIBaseURLOverride(to: &components)
+
         return components.url
     }
-    
+
     static func mediaWikiRestAPIURL(project: WMFProject, additionalPathComponents: [String]) -> URL? {
         guard let siteURL = project.siteURL,
         var components = URLComponents(url: siteURL, resolvingAgainstBaseURL: false) else {
             return nil
         }
-        
+
         components.path = baseMediaWikiRestAPIPathComponents + additionalPathComponents.joined(separator: "/")
-        
+
+        // Debug-only test seam: redirect to a mock server when an apiBaseUrl launch override is set.
+        WMFTestConfig.applyAPIBaseURLOverride(to: &components)
+
         return components.url
     }
     
