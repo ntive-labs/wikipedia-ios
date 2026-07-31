@@ -1,4 +1,5 @@
 import CocoaLumberjackSwift
+import WMFData
 
 enum APIURLComponentsBuilderError: Error {
     case failureConvertingJsonDataToString
@@ -8,29 +9,47 @@ enum APIURLComponentsBuilderError: Error {
 public struct APIURLComponentsBuilder {
     let hostComponents: URLComponents
     let basePathComponents: [String]
-    
+
+    /// True when this builder targets a MediaWiki/RESTBase *API* endpoint (as opposed to a canonical
+    /// `/wiki/Title` article URL). Only API endpoints are redirected by the debug-only mock seam so
+    /// that article URLs keep their real host (and thus their language/identity).
+    private var isAPIBasePath: Bool {
+        let apiBasePaths: [[String]] = [
+            Configuration.Path.restBaseAPIComponents,
+            Configuration.Path.mediaWikiAPIComponents,
+            Configuration.Path.mediaWikiRestAPIComponents
+        ]
+        return apiBasePaths.contains(basePathComponents)
+    }
+
     func components(byAppending pathComponents: [String] = [], queryParameters: [String: Any]? = nil) -> URLComponents {
         var components = hostComponents
         components.replacePercentEncodedPathWithPathComponents(basePathComponents + pathComponents)
         components.replacePercentEncodedQueryWithQueryParameters(queryParameters)
+        if isAPIBasePath {
+            WMFTestConfig.applyAPIBaseURLOverride(to: &components)
+        }
         return components
     }
-    
+
     func components(byAssigningPayloadToPercentEncodedQuery payload: NSObject) throws -> URLComponents {
         guard JSONSerialization.isValidJSONObject(payload) else {
             throw APIURLComponentsBuilderError.failureConvertingJsonDataToString
         }
         let payloadJsonData = try JSONSerialization.data(withJSONObject:payload, options: [])
-        
+
         guard let payloadString = String(data: payloadJsonData, encoding: .utf8) else {
             throw APIURLComponentsBuilderError.failureConvertingJsonDataToString
         }
-        
+
         let encodedPayloadJsonString = payloadString.wmf_UTF8StringWithPercentEscapes()
-        
+
         var components = hostComponents
         components.replacePercentEncodedPathWithPathComponents(basePathComponents)
         components.percentEncodedQuery = encodedPayloadJsonString
+        if isAPIBasePath {
+            WMFTestConfig.applyAPIBaseURLOverride(to: &components)
+        }
         return components
     }
 

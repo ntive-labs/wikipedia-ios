@@ -25,7 +25,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let appViewController = WMFAppViewController()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
+
+        // Debug-only test seam: surface any mock-backend launch overrides (apiBaseUrl / disableCertPinning).
+        // No-op in release builds. See WMFTestConfig.
+        WMFTestConfig.applyLaunchOverrides()
+
         registerUserDefaults()
         
 #if DEBUG
